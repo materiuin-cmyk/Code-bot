@@ -50,8 +50,9 @@ export function getTime(format) {
  */
 export class Pen {
 
-  constructor(level) {
+  constructor({ level, format }) {
     this.level = level;
+    this.format = format ?? TIME_FORMAT;
   }
 
   Magenta(args) {
@@ -74,34 +75,38 @@ export class Pen {
     return '\x1b[33m' + args + '\x1b[0m';
   }
 
+  Log(...args) {
+    console.log(getTime(this.format), ...args);
+  }
 
-  Debug(args) {
+  Debug(...args) {
     if (this.level > LL_DEBUG || this.level == LL_NONE) {
       return
     }
-    console.log(`${getTime()} ${this.Magenta('[D]')}`, args);
+    this.Log(this.Magenta('[D]'), ...args);
   }
 
-  Info(args) {
+  Info(...args) {
     if (this.level > LL_INFO || this.level == LL_NONE) {
       return
     }
-    console.log(`${getTime()} ${this.Cyan('[I]')}`, args);
+    this.Log(this.Cyan('[I]'), ...args);
   }
 
-  Warn(args) {
+  Warn(...args) {
     if (this.level > LL_WARN || this.level == LL_NONE) {
       return
     }
-    console.log(`${getTime()} ${this.Yellow('[W]')}`, args);
+    this.Log(this.Yellow('[W]'), ...args);
   }
 
-  Error(args) {
+  Error(...args) {
     if (this.level > LL_ERROR || this.level == LL_NONE) {
       return
     }
-    console.log(`${getTime()} ${this.Red('[E]')}`, args);
+    this.Log(this.Red('[E]'), ...args);
   }
 }
 
-export default new Pen();
+
+export default new Pen({ format: 'HH:mm:ss' });
