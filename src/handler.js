@@ -14,7 +14,7 @@ import { platform } from "os";
 import { pathToFileURL } from "url";
 import { Plugin } from "./plugin.js";
 import pen from "./pen.js";
-import { MESSAGES_UPSERT } from "./const.js";
+import { GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, GROUPS_UPSERT, MESSAGES_REACTION, MESSAGES_UPSERT } from "./const.js";
 
 export class Handler {
   constructor({ pluginDir, filter }) {
@@ -71,6 +71,10 @@ export class Handler {
     }
   }
 
+  async isCMD(p) {
+    return this.cmds.has(p);
+  }
+
   async handle(ctx) {
     for (const listen of this.listens.values()) {
       if (!await listen.check(ctx)) {
@@ -80,6 +84,10 @@ export class Handler {
     }
   }
 
+  /** 
+  *
+  * @param {import('baileys').WASocket} sock 
+  */
   async attach(sock) {
     this.sock = sock;
 
@@ -90,5 +98,30 @@ export class Handler {
       }
     });
 
+    sock.ev.on(MESSAGES_REACTION, (reactions) => {
+      for (const msg of reactions) {
+        const ctx = new Ctx({ eventName: MESSAGES_REACTION, event: msg, eventType: reactions.type });
+        this.handle(ctx);
+      }
+    });
+
+    sock.ev.on(GROUPS_UPSERT, (upsert) => {
+      for (const group of upsert) {
+        const ctx = new Ctx({ eventName: GROUPS_UPSERT, event: group, eventType: upsert.type });
+        this.handle(ctx);
+      }
+    });
+
+    sock.ev.on(GROUPS_UPDATE, (update) => {
+      for (const group of update) {
+        const ctx = new Ctx({ eventName: GROUPS_UPDATE, event: group, eventType: update.type });
+        this.handle(ctx);
+      }
+    });
+
+    sock.ev.on(GROUP_PARTICIAPANTS_UPDATE, (update) => {
+      const ctx = new Ctx({ eventName: GROUP_PARTICIAPANTS_UPDATE, event: update, eventType: update.type });
+      this.handle(ctx);
+    })
   }
 }

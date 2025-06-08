@@ -8,15 +8,103 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
+import { GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, MESSAGES_REACTION } from './const.js';
+
+const skipMessageTypes = [
+  'messageContextInfo',
+]
+
+/**
+ * Extracts text content and context info from a message
+ * 
+ * @param {Partial<import('baileys').WAMessage>} m - Message object
+ * @returns {{text: string, contextInfo: import('baileys').WAContextInfo | null, type: string}} Extracted text and context
+ */
+export function extactTextContext(m) {
+  let resp = {
+    text: "",
+    contextInfo: null,
+    type: null
+  }
+
+  if (typeof m !== 'object' || m === null) return resp;
+
+  for (let key in m) {
+    if (key === 'protocolMessage') {
+      if (m[key]?.editedMessage) {
+        resp = extactTextContext(m[key].editedMessage);
+        break;
+      }
+    }
+
+    if (m[key] === null || m[key] === undefined) { continue; }
+    if (key === 'conversation') {
+      if (m[key].length > 0) {
+        resp.text = m[key];
+        if (!skipMessageTypes.includes(key)) resp.type = key;
+        continue;
+      }
+    }
+
+    if (typeof m[key] === 'object') {
+      if (!skipMessageTypes.includes(key)) resp.type = key;
+      if (m[key].caption?.length > 0) { resp.text = m[key].caption; }
+      if (m[key].text?.length > 0) { resp.text = m[key].text; }
+      if (m[key].contextInfo) { resp.contextInfo = m[key].contextInfo; }
+    }
+  }
+
+  return resp;
+}
 
 export class Ctx {
-  constructor({ eventName, event, eventType }) {
+  constructor({ sock, handler, eventName, event, eventType }) {
+    this.sock = sock;
+    this.handler = handler;
+
     this.eventName = eventName;
     this.event = event;
     this.eventType = eventType;
 
-    this.timestamp = new Date().getTime();
+    this.timestamp = event.messageTimestamp ?? new Date().getTime();
 
+    if (eventName === GROUPS_UPDATE) {
+      this.chat = event.id;
+      this.sender = event.author;
+    }
+
+    if (eventName === GROUP_PARTICIAPANTS_UPDATE) {
+      this.chat = event.id;
+      this.sender = event.author;
+      this.mentionedJid = event.participants;
+      this.action = event.action;
+    }
+
+    if (event.key) {
+      this.id = event.key.id;
+      this.fromMe = event.key.fromMe;
+      this.chat = event.key.remoteJid;
+      this.sender = event.key.participant;
+    }
+
+    if (event.message) {
+      const ext = extactTextContext(event.message);
+      this.type = ext.type;
+      this.text = ext.text;
+      this.contextInfo = ext.contextInfo;
+
+      this.quotedMessage = ext?.contextInfo?.quotedMessage;
+      const qext = extactTextContext(event.quotedMessage);
+      this.quotedText = qext.text;
+      this.stanzaId = ext.contextInfo?.stanzaId;
+      this.participant = ext.contextInfo?.participant;
+      this.remoteJid = ext.contextInfo?.remoteJid;
+      this.mentionedJid = ext.contextInfo?.mentionedJid;
+      this.expiration = ext.contextInfo?.expiration;
+    }
+
+    if (eventName === MESSAGES_REACTION) {
+    }
 
   }
 }
