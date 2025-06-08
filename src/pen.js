@@ -50,9 +50,14 @@ export function getTime(format) {
  */
 export class Pen {
 
-  constructor({ level, format }) {
+  constructor({ level, format, prefix }) {
+    this.prefix = prefix;
     this.level = level;
     this.format = format ?? TIME_FORMAT;
+  }
+
+  SetPrefix(prefix) {
+    this.prefix = prefix;
   }
 
   Magenta(args) {
@@ -76,7 +81,11 @@ export class Pen {
   }
 
   Log(...args) {
-    console.log(getTime(this.format), ...args);
+    if (this.prefix) {
+      console.log(getTime(this.format), this.prefix, ...args);
+    } else {
+      console.log(getTime(this.format), ...args);
+    }
   }
 
   Debug(...args) {
