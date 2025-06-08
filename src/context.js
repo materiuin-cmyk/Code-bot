@@ -9,6 +9,7 @@
  */
 
 import { GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, MESSAGES_REACTION } from './const.js';
+import pen from './pen.js';
 
 const skipMessageTypes = [
   'messageContextInfo',
@@ -104,6 +105,13 @@ export class Ctx {
     }
 
     if (eventName === MESSAGES_REACTION) {
+      if (event.reaction) {
+        pen.Debug(event.reaction);
+        this.text = event.reaction.text
+        this.stanzaId = event.reaction.key?.id;
+        this.remoteJid = event.reaction.key?.remoteJid;
+        this.participant = event.reaction.key?.participant;
+      }
     }
 
   }
