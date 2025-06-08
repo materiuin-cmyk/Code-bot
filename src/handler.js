@@ -31,14 +31,21 @@ export class Handler {
   }
 
   /** @param {import('./plugin.js').Plugin} opts */
-  async on(opts) {
-    const plugin = new Plugin(opts);
+  async on(opt) {
+    const plugin = new Plugin(opt);
     if (plugin.cmd) {
       const newid = this.cmds.size;
       this.cmds.set(newid, plugin);
     } else {
       const newid = this.cmds.size;
       this.listens.set(newid, plugin);
+    }
+  }
+
+  /** @param {import('./plugin.js').Plugin[]} opts */
+  async ons(opts) {
+    for (const opt of opts) {
+      await this.on(opt);
     }
   }
 
