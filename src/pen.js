@@ -14,9 +14,16 @@ export const LL_INFO = 2;
 export const LL_WARN = 3;
 export const LL_ERROR = 4;
 
-let TIME_FORMAT = 'HH:mm:ss.SSS';
+/** @type {string} */
+export const TIME_FORMAT = 'HH:mm:ss.SSS';
 
-function getTime(format) {
+/** 
+ * getTime returns the current time in the specified format.
+ *
+ * @param {string} format - The format of the time.
+ * @returns {string} The current time in the specified format.
+ */
+export function getTime(format) {
   if (!format || format === '') {
     format = TIME_FORMAT;
   }
@@ -34,6 +41,13 @@ function getTime(format) {
   return format;
 }
 
+
+/**
+ * Pen is a class that provides methods to print colored logs to the console.
+ *
+ * @param {number} level - The level of the log.
+ * @returns {Pen} A new instance of the Pen class with the specified level.
+ */
 export class Pen {
 
   constructor(level) {
