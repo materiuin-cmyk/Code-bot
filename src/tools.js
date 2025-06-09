@@ -34,3 +34,41 @@ export function hashCRC32(str) {
   }
   return (crc >>> 0).toString(16).toUpperCase();
 }
+
+
+/** 
+ * Number of milliseconds in a second
+ * @type {number}
+ */
+const SECOND = 1000;
+
+/** 
+ * Number of milliseconds in a minute
+ * @type {number}
+ */
+const MINUTE = 60 * SECOND;
+
+/** 
+ * Number of milliseconds in an hour
+ * @type {number}
+ */
+const HOUR = 60 * MINUTE;
+
+/** 
+ * Format elapsed time into human readable string
+ * 
+ * @param {number} elapse - Time in milliseconds
+ * @returns {string} Formatted string (e.g. "5h 30m 20s", "45m 30s", "30s", "100ms")
+ */
+export function formatElapse(elapse) {
+  let est = `${elapse}ms`;
+  if (elapse >= HOUR) {
+    est = `${Math.floor(elapse / HOUR)}h ${Math.floor((elapse % HOUR) / MINUTE)}m ${Math.floor((elapse % MINUTE) / SECOND)}s`;
+  } else if (elapse >= MINUTE) {
+    est = `${Math.floor(elapse / MINUTE)}m ${Math.floor((elapse % MINUTE) / SECOND)}s`;
+  } else if (elapse >= SECOND) {
+    est = `${Math.floor(elapse / SECOND)}s`;
+  }
+  return est
+}
+
