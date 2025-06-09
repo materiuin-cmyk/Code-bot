@@ -8,6 +8,7 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
+import { jidNormalizedUser } from 'baileys';
 import { CONTACTS_UPDATE, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, MESSAGES_REACTION } from './const.js';
 import pen from './pen.js';
 
@@ -129,6 +130,14 @@ export class Ctx {
     this.pushName = event?.pushName ?? this.pushName;
     this.chatName = this.getName(this.chat) ?? this.chat;
     this.senderName = this.pushName ?? this.getName(this.sender) ?? this.sender;
+
+    if (this.sender && this.sender?.endsWith('@lid')) {
+      const jidLID = jidNormalizedUser(this.sock?.user?.lid);
+      const isOwnLID = jidLID === this.sender;
+      pen.Warn(this.sock?.user);
+
+      this.fromMe = isOwnLID || this.fromMe;
+    }
 
   }
 
