@@ -10,8 +10,9 @@
 
 import { loadEnvFile } from "process";
 import pen from "./pen.js";
-import { makeConnection } from "./client.js";
+import { Wangsaf } from "./client.js";
 import { Handler } from "./handler.js";
+import { StoreJson } from "./store.js";
 
 /* Load environment variables from .env file */
 try {
@@ -20,24 +21,24 @@ try {
   pen.Debug('loadEnvFile', e.message);
 }
 
-function connect() {
-  makeConnection({
-    dataDir: 'data',
-    phone: process.env.PHONE ?? '',
-    method: process.env.METHOD ?? 'otp',
-    session: process.env.SESSION ?? 'sesi',
-    handler: new Handler({
-      pluginDir: process.cwd() + '/plugins',
-    }),
-    retry: true
-  })
-}
+const wea = new Wangsaf({
+  dataDir: 'data',
+  phone: process.env.PHONE ?? '',
+  method: process.env.METHOD ?? 'otp',
+  session: process.env.SESSION ?? 'sesi',
+  handler: new Handler({
+    pluginDir: process.cwd() + '/plugins',
+    groupCache: new StoreJson({ saveName: 'group_metadata.json', autoSave: true }),
+    // contactCache: new StoreJson({ saveName: 'contacts.json', autoSave: true }),
+  }),
+  retry: true
+});
 
 try {
-  connect()
+  wea.connect();
 } catch (e) {
   pen.Error(e)
-  connect()
+  wea.connect();
 }
 
 
