@@ -45,42 +45,36 @@ export class Handler {
   }
 
   /** @param {import('./plugin.js').Plugin} opts */
-  async on(opt) {
-    const plugin = new Plugin(opt);
-    if (plugin.cmd) {
-      let precmds = [];
-      if (Array.isArray(plugin.cmd)) {
-        precmds = plugin.cmd;
-      } else {
-        precmds = [plugin.cmd];
-      }
-
-      let cmds = [];
-      for (const precmd of precmds) {
-        if (plugin.noPrefix) {
-          cmds.push(precmd);
+  async on(...opts) {
+    for (const opt of opts) {
+      const plugin = new Plugin(opt);
+      if (plugin.cmd) {
+        let precmds = [];
+        if (Array.isArray(plugin.cmd)) {
+          precmds = plugin.cmd;
         } else {
-          for (const pre of this.prefix) {
-            cmds.push(`${pre}${precmd}`);
+          precmds = [plugin.cmd];
+        }
+
+        let cmds = [];
+        for (const precmd of precmds) {
+          if (plugin.noPrefix) {
+            cmds.push(precmd);
+          } else {
+            for (const pre of this.prefix) {
+              cmds.push(`${pre}${precmd}`);
+            }
           }
         }
-      }
 
-      for (const cmd of cmds) {
-        this.cmds.set(cmd.toLowerCase(), plugin);
+        for (const cmd of cmds) {
+          this.cmds.set(cmd.toLowerCase(), plugin);
+        }
+      } else {
+        this.listens.set(this.listens.size, plugin);
       }
-    } else {
-      this.listens.set(this.listens.size, plugin);
     }
   }
-
-  /** @param {import('./plugin.js').Plugin[]} opts */
-  async ons(opts) {
-    for (const opt of opts) {
-      await this.on(opt);
-    }
-  }
-
 
   async loadPlugin(dir) {
     let files = [];
@@ -104,11 +98,18 @@ export class Handler {
           }
 
           const loaded = await import(loc);
-          if (loaded.default) this.on(loaded.default);
+          if (loaded.default) {
+            if (Array.isArray(loaded.default)) {
+              this.on(...loaded.default);
+            } else {
+              this.on(loaded.default);
+            }
+          }
+
 
           this.pen.Debug(`Plugin loaded:`, loc)
         } catch (e) {
-          this.pen.Error(e.message, loc);
+          this.pen.Error(loc, e);
         }
       }
     }
