@@ -13,7 +13,7 @@ import pen from './pen.js';
 
 const skipMessageTypes = [
   'messageContextInfo',
-]
+];
 
 /**
  * Extracts text content and context info from a message
@@ -60,7 +60,10 @@ export function extactTextContext(m) {
 
 export class Ctx {
   constructor({ sock, handler, eventName, event, eventType }) {
+    /** @type {import('baileys').WASocket} */
     this.sock = sock;
+
+    /** @type {import('./handler.js').Handler} */
     this.handler = handler;
 
     this.eventName = eventName;
@@ -104,15 +107,31 @@ export class Ctx {
       this.expiration = ext.contextInfo?.expiration;
     }
 
-    if (eventName === MESSAGES_REACTION) {
-      if (event.reaction) {
-        pen.Debug(event.reaction);
-        this.text = event.reaction.text
-        this.stanzaId = event.reaction.key?.id;
-        this.remoteJid = event.reaction.key?.remoteJid;
-        this.participant = event.reaction.key?.participant;
-      }
+    if (event.reaction) {
+      this.text = event.reaction.text
+      this.stanzaId = event.reaction.key?.id;
+      this.remoteJid = event.reaction.key?.remoteJid;
+      this.participant = event.reaction.key?.participant;
     }
-
   }
+
+  async sendMessage(jid, content, options) {
+    return await this.sock.sendMessage(jid, content, options)
+  }
+
+  async relayMessage(jid, content, options) {
+    return await this.sock.relayMessage(jid, content, options);
+  }
+
+  async reply(content, options) {
+    if (!this.chat) throw new Error('chat jid not provided');
+
+    return await this.sock.sendMessage(this.chat, content, options);
+  }
+
+  async replyRelay(content, options) {
+    if (!this.chat) throw new Error('chat jid not provided');
+    return await this.sock.relayMessage(this.chat, content, options);
+  }
+
 }
