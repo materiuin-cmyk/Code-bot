@@ -114,6 +114,10 @@ export class Ctx {
       this.expiration = ext.contextInfo?.expiration;
     }
 
+    if (eventType === 'append') {
+      this.sender = jidNormalizedUser(event.participant);
+    }
+
     if (event.reaction) {
       this.text = event.reaction.text
       this.stanzaId = event.reaction.key?.id;
@@ -135,11 +139,9 @@ export class Ctx {
     if (this.sender && this.sender?.endsWith('@lid')) {
       const jidLID = jidNormalizedUser(this.sock?.user?.lid);
       const isOwnLID = jidLID === this.sender;
-      pen.Warn(this.sock?.user);
 
       this.fromMe = isOwnLID || this.fromMe;
     }
-
   }
 
   /** 
