@@ -190,6 +190,12 @@ export class Handler {
           });
           break;
         }
+        case MESSAGES_UPSERT: {
+          if (ctx?.expiration) {
+            this.updateTimer(ctx.sender, ctx.expiration);
+          }
+          break;
+        }
       }
     } catch (e) {
       this.pen.Error(e);
@@ -319,5 +325,18 @@ export class Handler {
 
   getContact(jid) {
     return this.contactCache.get(jid);
+  }
+
+  updateTimer(jid, ephemeral) {
+    if (ephemeral) {
+      const data = this.timerCache.get(jid);
+      if (data !== ephemeral) {
+        this.timerCache.set(jid, ephemeral);
+      }
+    }
+  }
+
+  getTimer(jid) {
+    return this.timerCache.get(jid);
   }
 }
