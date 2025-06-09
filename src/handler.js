@@ -192,7 +192,7 @@ export class Handler {
         }
         case MESSAGES_UPSERT: {
           if (ctx?.expiration) {
-            this.updateTimer(ctx.sender, ctx.expiration);
+            this.updateTimer(ctx.chat, ctx.expiration);
           }
           break;
         }
