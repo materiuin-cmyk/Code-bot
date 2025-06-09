@@ -11,6 +11,7 @@
 import { jidNormalizedUser } from 'baileys';
 import { CONTACTS_UPDATE, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, MESSAGES_REACTION } from './const.js';
 import pen from './pen.js';
+import { genHEX } from './tools.js';
 
 const skipMessageTypes = [
   'messageContextInfo',
@@ -141,7 +142,22 @@ export class Ctx {
 
   }
 
+  /** 
+  *
+  *
+  * @param {string} jid
+  * @param {import('baileys').AnyMessageContent} content
+  * @param {import('baileys').MessageGenerationOptions} options
+  */
   async sendMessage(jid, content, options) {
+    if (!options) {
+      options = {};
+    }
+
+    if (!options.messageId) {
+      options.messageId = genHEX(32);
+    }
+
     return await this.sock.sendMessage(jid, content, options)
   }
 
@@ -149,6 +165,11 @@ export class Ctx {
     return await this.sock.relayMessage(jid, content, options);
   }
 
+  /**
+   *
+   * @param {import('baileys').AnyMessageContent} content
+   * @param {import('baileys').MessageGenerationOptions} options
+   */
   async reply(content, options) {
     if (!this.chat) throw new Error('chat jid not provided');
 
