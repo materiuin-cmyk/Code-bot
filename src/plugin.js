@@ -8,23 +8,54 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
-
+/**
+ * Plugin class for handling event as listener or command
+ */
 export class Plugin {
-  constructor({ cmd, desc, tags, disabled, timeout, noPrefix, midware, exec }) {
+  constructor({ cmd, desc, tags, disabled, hidden, timeout, noPrefix, midware, exec }) {
+    /** @type {import('./handler.js').Handler} */
     this.handler = null;
+
+    /** @type {import('baileys').WASocket} */
     this.sock = null;
 
     /** @type {string | string[]}*/
     this.cmd = cmd;
+
+    /** @type {string} */
     this.desc = desc;
+
+    /** @type {string[]} */
     this.tags = tags;
+
+    /** @type {boolean} */
     this.disabled = disabled;
+
+    /** @type {boolean} */
+    this.hidden = hidden;
+
+    /**
+     * Timeout in second
+     *
+     * @type {number}
+     */
     this.timeout = timeout;
+
+    /** @type {boolean} */
     this.noPrefix = noPrefix;
+
+    /** @type {(ctx: import('./context.js').Ctx) => Promise<boolean>} */
     this.midware = midware;
+
+    /** @type {(ctx: import('./context.js').Ctx) => Promise<void>} */
     this.exec = exec;
   }
 
+  /**
+   * Checker before execution
+   *
+   * @param {import('./context.js').Ctx} ctx
+   */
   async check(ctx) {
     if (this.disabled) return false;
 
