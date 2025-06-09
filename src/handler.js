@@ -177,7 +177,7 @@ export class Handler {
         case GROUPS_UPSERT:
         case GROUP_PARTICIAPANTS_UPDATE:
         case GROUPS_UPDATE: {
-          this.pen.Warn('Updating', ctx.eventName);
+          this.pen.Warn(ctx.eventName, ctx.eventName);
           await this.updateGroupMetadata(ctx.chat);
           break;
         }
