@@ -124,7 +124,6 @@ export class Handler {
     return this.cmds.has(p);
   }
 
-
   /**
    * Handle event and passed it to all plugins whether it is a command or a listener
    *
@@ -148,7 +147,7 @@ export class Handler {
     }
 
     /* Handle commands */
-    if (ctx?.pattern && ctx.eventType !== 'append') {
+    if (ctx?.pattern && ctx?.eventType !== 'append' && ctx?.type !== 'senderKeyDistributionMessage') {
       const plugin = this.cmds.get(ctx.pattern.toLowerCase());
       if (plugin) {
         try {
