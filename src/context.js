@@ -9,7 +9,7 @@
  */
 
 import { jidNormalizedUser } from 'baileys';
-import { CONTACTS_UPDATE, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, MESSAGES_REACTION } from './const.js';
+import { CONTACTS_UPDATE, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE } from './const.js';
 import pen from './pen.js';
 import { genHEX } from './tools.js';
 
@@ -143,7 +143,7 @@ export class Ctx {
   }
 
   /** 
-  *
+  * Send message to given jid
   *
   * @param {string} jid
   * @param {import('baileys').AnyMessageContent} content
@@ -154,8 +154,10 @@ export class Ctx {
       options = {};
     }
 
-    if (!options.messageId) {
-      options.messageId = genHEX(32);
+    if (!options.messageId) options.messageId = genHEX(32);
+    const ephemeral = this.handler?.getTimer(jid);
+    if (ephemeral && ephemeral > 0) {
+      options.ephemeralExpiration = ephemeral;
     }
 
     return await this.sock.sendMessage(jid, content, options)
@@ -173,7 +175,7 @@ export class Ctx {
   async reply(content, options) {
     if (!this.chat) throw new Error('chat jid not provided');
 
-    return await this.sock.sendMessage(this.chat, content, options);
+    return await this.sendMessage(this.chat, content, options);
   }
 
   async replyRelay(content, options) {
@@ -181,9 +183,8 @@ export class Ctx {
     return await this.sock.relayMessage(this.chat, content, options);
   }
 
-
-
   getName(jid) {
+    jid = jidNormalizedUser(jid);
     if (!jid || !this.handler || jid === '') return null;
 
     if (jid.endsWith('@g.us')) {
