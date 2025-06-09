@@ -28,7 +28,9 @@ function connect() {
     session: process.env.SESSION ?? 'sesi',
     handler: new Handler({
       pluginDir: process.cwd() + '/plugins',
-    })
+    }),
+    pen: pen,
+    retry: true
   })
 }
 

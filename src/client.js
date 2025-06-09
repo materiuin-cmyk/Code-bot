@@ -31,7 +31,6 @@ function ask(prompt) {
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 
-
 /**
  *
  * @param {string} sessionStr 
@@ -59,14 +58,16 @@ export async function useStore(sessionStr) {
  * @property {Object} socketOptions
  * @property {import("baileys").CacheStore} groupCache
  * @property {boolean} retry
+ * @property {import('./pen.js').Pen} pen 
  */
 
 /**
  * @param {Config} config 
  */
 export async function makeConnection(config) {
-  if (!config) throw new Error('Config is required');
-  if (!config.session) throw new Error('Session is required');
+  if (!config) throw new Error('config is required');
+  if (!config.session) throw new Error('session is required');
+  const pen = config.pen ?? pen;
 
   /** @type  {import('baileys').AuthenticationState, Promise<void> } */
   const { state, saveCreds } = await useStore(config.session)
@@ -94,7 +95,11 @@ export async function makeConnection(config) {
     }
   }
 
-  if (config.method == 'otp' && !state?.creds?.registered && state?.creds?.platform === '') {
+  pen.Debug('Method :', config.method, ', Registered :', state?.creds?.registered, ', Platform :', state?.creds?.platform);
+  pen.Warn(config.method == 'otp', (!state?.creds?.registered && !state?.creds?.platform))
+  if (config.method == 'otp' && (!state?.creds?.registered && !state?.creds?.platform)) {
+
+    pen.Debug('Delay for 3000ms before requesting pairing code')
     /* Delay needed for pairing code */
     await delay(3000);
 
@@ -142,6 +147,5 @@ export async function makeConnection(config) {
   });
 
   sock.ev.on(CREDS_UPDATE, saveCreds);
-
 
 }
