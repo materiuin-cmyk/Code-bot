@@ -51,7 +51,12 @@ export class Handler {
 
 
   async loadPlugin(dir) {
-    const files = readdirSync(dir);
+    let files = [];
+    try {
+      files = readdirSync(dir);
+    } catch (e) {
+      pen.Error(e);
+    }
     for (const file of files) {
       let loc = `${dir}/${file}`.replace('//', '/');
 
