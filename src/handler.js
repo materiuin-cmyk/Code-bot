@@ -19,11 +19,11 @@ import { GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, GROUPS_UPSERT, MESSAGES_REAC
 let pen = new Pen({ prefix: 'handler' });
 
 export class Handler {
-  constructor({ pluginDir, filter, pen }) {
+  constructor({ pluginDir, filter, pen: passPen }) {
     this.pluginDir = pluginDir ?? '../plugins';
     this.filters = filter;
     this.sock = null;
-    if (pen) pen = pen;
+    if (pen) pen = passPen;
 
     this.plugins = new Map();
     this.cmds = new Map();
