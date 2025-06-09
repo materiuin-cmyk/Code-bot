@@ -119,6 +119,13 @@ export class Ctx {
       this.participant = event.reaction.key?.participant;
     }
 
+    /* Parsing cmd */
+    if (this.text && this.text.length > 0) {
+      const splitted = this.text.split(' ');
+      this.pattern = splitted[0];
+      this.args = splitted.slice(1)?.join(' ');
+    }
+
     this.chatName = this.getName(this.chat) ?? this.chat;
     this.senderName = this.pushName ?? this.getName(this.sender) ?? this.sender;
 
