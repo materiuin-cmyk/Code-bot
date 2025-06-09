@@ -157,6 +157,7 @@ export class Ctx {
     }
 
     if (!options.messageId) options.messageId = genHEX(32);
+
     const ephemeral = this.handler?.getTimer(jid);
     if (ephemeral && ephemeral > 0) {
       options.ephemeralExpiration = ephemeral;
@@ -169,8 +170,31 @@ export class Ctx {
     }
   }
 
+
+  /**
+   * Relay message to given jid
+   *
+   * @param {string} jid
+   * @param {import('baileys').proto.IMessage} content
+   * @param {import('baileys').MessageGenerationOptions} options
+   */
   async relayMessage(jid, content, options) {
-    return await this.sock.relayMessage(jid, content, options);
+    if (!options) {
+      options = {};
+    }
+
+    if (!options.messageId) options.messageId = genHEX(32);
+
+    const ephemeral = this.handler?.getTimer(jid);
+    if (ephemeral && ephemeral > 0) {
+      options.ephemeralExpiration = ephemeral;
+    }
+
+    try {
+      return await this.sock.relayMessage(jid, content, options);
+    } catch (e) {
+      pen.Error(e);
+    }
   }
 
   /**
