@@ -119,8 +119,9 @@ export class Ctx {
       this.participant = event.reaction.key?.participant;
     }
 
-    this.chatName = this.jidName(this.chat) ?? '';
-    this.senderName = this.jidName(this.sender) ?? '';
+    this.chatName = this.getName(this.chat) ?? this.chat;
+    this.senderName = this.pushName ?? this.getName(this.sender) ?? this.sender;
+
   }
 
   async sendMessage(jid, content, options) {
@@ -142,29 +143,26 @@ export class Ctx {
     return await this.sock.relayMessage(this.chat, content, options);
   }
 
-  jidName(jid) {
-    if (!jid || !this.handler || jid === '') return '';
-    pen.Warn(jid);
 
+
+  getName(jid) {
+    if (!jid || !this.handler || jid === '') return null;
 
     if (jid.endsWith('@g.us')) {
-
-      let data = this.handler.groupCache.get(jid);
-      if (!data) {
-        data = this.sock.groupMetadata(jid);
-        this.handler.groupCache.set(jid, data);
-      }
-      return data.subject;
+      let data = this.handler.getGroupMetadata(jid);
+      return data?.subject;
     } else if (jid.endsWith('@s.whatsapp.net')) {
-      const data = this.handler.contactCache.get(jid);
+      const data = this.handler.getContact(jid);
       if (data) {
         return data.name;
       }
     } else if (jid.endsWith('@newsletter')) {
 
+    } else if (jid.endsWith('@lid')) {
+
     }
 
-    return '';
+    return null;
   }
 
 }
