@@ -13,14 +13,17 @@ import { Ctx } from "./context.js";
 import { platform } from "os";
 import { pathToFileURL } from "url";
 import { Plugin } from "./plugin.js";
-import pen from "./pen.js";
+import { Pen } from "./pen.js";
 import { GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, GROUPS_UPSERT, MESSAGES_REACTION, MESSAGES_UPSERT } from "./const.js";
 
+let pen = new Pen({ prefix: 'handler' });
+
 export class Handler {
-  constructor({ pluginDir, filter }) {
+  constructor({ pluginDir, filter, pen }) {
     this.pluginDir = pluginDir ?? '../plugins';
     this.filters = filter;
     this.sock = null;
+    if (pen) pen = pen;
 
     this.plugins = new Map();
     this.cmds = new Map();
@@ -34,11 +37,9 @@ export class Handler {
   async on(opt) {
     const plugin = new Plugin(opt);
     if (plugin.cmd) {
-      const newid = this.cmds.size;
-      this.cmds.set(newid, plugin);
+      this.cmds.set(this.cmds.size, plugin);
     } else {
-      const newid = this.cmds.size;
-      this.listens.set(newid, plugin);
+      this.listens.set(this.listens.size, plugin);
     }
   }
 
