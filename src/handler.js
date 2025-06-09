@@ -16,14 +16,14 @@ import { Plugin } from "./plugin.js";
 import { Pen } from "./pen.js";
 import { CONTACTS_UPDATE, CONTACTS_UPSERT, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, GROUPS_UPSERT, MESSAGES_REACTION, MESSAGES_UPSERT } from "./const.js";
 
-let pen = new Pen({ prefix: 'handler' });
-
 export class Handler {
-  constructor({ pluginDir, filter, pen: passPen, groupCache, contactCache, timerCache }) {
+  constructor({ pluginDir, filter, pen, groupCache, contactCache, timerCache }) {
     this.pluginDir = pluginDir ?? '../plugins';
     this.filters = filter;
     this.sock = null;
-    if (passPen) pen = passPen;
+
+    /** @type {import('./pen.js').Pen)} */
+    this.pen = pen ?? new Pen({ prefix: 'hand' });
 
     this.plugins = new Map();
     this.cmds = new Map();
@@ -65,7 +65,7 @@ export class Handler {
     try {
       files = readdirSync(dir);
     } catch (e) {
-      pen.Error(e);
+      this.pen.Error(e);
     }
     for (const file of files) {
       let loc = `${dir}/${file}`.replace('//', '/');
@@ -73,7 +73,7 @@ export class Handler {
       try {
         if (statSync(loc)?.isDirectory()) await this.loadPlugin(loc);
       } catch (e) {
-        pen.Error(e.message);
+        this.pen.Error(e.message);
       }
       if (loc.endsWith('.js')) {
         try {
@@ -82,12 +82,12 @@ export class Handler {
           }
 
           const loaded = await import(loc);
-          if (loaded.on) this.on(loaded.on);
-          if (loaded.ons) this.ons(loaded.ons);
+          if (loaded.default) this.on(loaded.default);
+          this.pen.Warn(loaded.default);
 
-          pen.Debug(`Plugin loaded:`, loc)
+          this.pen.Debug(`Plugin loaded:`, loc)
         } catch (e) {
-          pen.Error(e.message, loc);
+          this.pen.Error(e.message, loc);
         }
       }
     }
@@ -121,7 +121,7 @@ export class Handler {
         /* Exec midware */
         if (listen.exec) await listen.exec(ctx);
       } catch (e) {
-        pen.Error(e);
+        this.pen.Error(e);
       }
     }
   }
@@ -138,16 +138,14 @@ export class Handler {
         case GROUPS_UPSERT:
         case GROUP_PARTICIAPANTS_UPDATE:
         case GROUPS_UPDATE: {
-          pen.Warn('Updating', ctx.eventName);
-          const data = await this.sock.groupMetadata(ctx.chat);
-          if (data) this.groupCache.set(ctx.chat, data);
-
+          this.pen.Warn('Updating', ctx.eventName);
+          await this.updateGroupMetadata(ctx.chat);
           break;
         }
 
         case CONTACTS_UPDATE:
         case CONTACTS_UPSERT: {
-          this.contactCache.set(ctx.sender, {
+          this.updateContact(ctx.sender, {
             jid: ctx.sender,
             name: ctx.pushName,
           });
@@ -155,7 +153,7 @@ export class Handler {
         }
       }
     } catch (e) {
-      pen.Error(e);
+      this.pen.Error(e);
     }
   }
 
@@ -255,6 +253,32 @@ export class Handler {
         this.handle(ctx);
       }
     });
+  }
 
+  async updateGroupMetadata(jid) {
+    try {
+      const data = await this.sock.groupMetadata(jid);
+      if (data) this.groupCache.set(jid, data);
+    } catch (e) {
+      this.pen.Error(e);
+    }
+  }
+
+  getGroupMetadata(jid) {
+    const data = this.groupCache.get(jid);
+    if (!data) this.updateGroupMetadata(jid).catch((e) => this.pen.Error(e));
+    return data;
+  }
+
+  updateContact(jid, data) {
+    try {
+      if (data) this.contactCache.set(jid, data);
+    } catch (e) {
+      this.pen.Error(e);
+    }
+  }
+
+  getContact(jid) {
+    return this.contactCache.get(jid);
   }
 }
