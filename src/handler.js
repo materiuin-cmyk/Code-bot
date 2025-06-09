@@ -17,13 +17,15 @@ import { Pen } from "./pen.js";
 import { CONTACTS_UPDATE, CONTACTS_UPSERT, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, GROUPS_UPSERT, MESSAGES_REACTION, MESSAGES_UPSERT } from "./const.js";
 
 export class Handler {
-  constructor({ pluginDir, filter, pen, groupCache, contactCache, timerCache }) {
+  constructor({ pluginDir, filter, prefix, pen, groupCache, contactCache, timerCache }) {
     this.pluginDir = pluginDir ?? '../plugins';
     this.filters = filter;
     this.sock = null;
 
     /** @type {import('./pen.js').Pen)} */
     this.pen = pen ?? new Pen({ prefix: 'hand' });
+
+    this.prefix = prefix ?? './';
 
     this.plugins = new Map();
     this.cmds = new Map();
@@ -46,7 +48,27 @@ export class Handler {
   async on(opt) {
     const plugin = new Plugin(opt);
     if (plugin.cmd) {
-      this.cmds.set(this.cmds.size, plugin);
+      let precmds = [];
+      if (Array.isArray(plugin.cmd)) {
+        precmds = plugin.cmd;
+      } else {
+        precmds = [plugin.cmd];
+      }
+
+      let cmds = [];
+      for (const precmd of precmds) {
+        if (plugin.noPrefix) {
+          cmds.push(precmd);
+        } else {
+          for (const pre of this.prefix) {
+            cmds.push(`${pre}${precmd}`);
+          }
+        }
+      }
+
+      for (const cmd of cmds) {
+        this.cmds.set(cmd.toLowerCase(), plugin);
+      }
     } else {
       this.listens.set(this.listens.size, plugin);
     }
@@ -83,7 +105,6 @@ export class Handler {
 
           const loaded = await import(loc);
           if (loaded.default) this.on(loaded.default);
-          this.pen.Warn(loaded.default);
 
           this.pen.Debug(`Plugin loaded:`, loc)
         } catch (e) {
@@ -122,6 +143,24 @@ export class Handler {
         if (listen.exec) await listen.exec(ctx);
       } catch (e) {
         this.pen.Error(e);
+      }
+    }
+
+    /* Handle commands */
+    if (ctx?.pattern) {
+      const plugin = this.cmds.get(ctx.pattern.toLowerCase());
+      if (plugin) {
+        try {
+          /* Check rules and midware before exec */
+          const passed = await plugin.check(ctx);
+          if (!passed) {
+            return;
+          }
+          /* Exec midware */
+          if (plugin.exec) await plugin.exec(ctx);
+        } catch (e) {
+          this.pen.Error(e);
+        }
       }
     }
   }
