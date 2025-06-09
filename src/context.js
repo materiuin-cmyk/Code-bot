@@ -126,6 +126,7 @@ export class Ctx {
       this.args = splitted.slice(1)?.join(' ');
     }
 
+    this.pushName = event?.pushName ?? this.pushName;
     this.chatName = this.getName(this.chat) ?? this.chat;
     this.senderName = this.pushName ?? this.getName(this.sender) ?? this.sender;
 
