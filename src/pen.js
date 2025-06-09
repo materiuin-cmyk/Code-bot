@@ -60,25 +60,33 @@ export class Pen {
     this.prefix = prefix;
   }
 
-  Magenta(args) {
-    return '\x1b[35m' + args + '\x1b[0m';
+  asString(...args) {
+    return args?.map(arg =>
+      typeof arg === 'object' && arg !== null
+        ? JSON.stringify(arg)
+        : String(arg)
+    ).join(' ')
   }
 
-  Cyan(args) {
-    return '\x1b[36m' + args + '\x1b[0m';
-  }
+  asColor(code, ...args) { return `\x1b[${code}m` + this.asString(...args) + '\x1b[0m'; }
 
-  Green(args) {
-    return '\x1b[32m' + args + '\x1b[0m';
-  }
+  Black(...args) { return this.asColor(30, ...args); }
+  Red(...args) { return this.asColor(31, ...args); }
+  Green(...args) { return this.asColor(32, ...args); }
+  Yellow(...args) { return this.asColor(33, ...args); }
+  Blue(...args) { return this.asColor(34, ...args); }
+  Magenta(...args) { return this.asColor(35, ...args); }
+  Cyan(...args) { return this.asColor(36, ...args); }
+  White(...args) { return this.asColor(37, ...args); }
 
-  Red(args) {
-    return '\x1b[31m' + args + '\x1b[0m';
-  }
-
-  Yellow(args) {
-    return '\x1b[33m' + args + '\x1b[0m';
-  }
+  BlackBr(...args) { return this.asColor(90, ...args); }
+  RedBr(...args) { return this.asColor(91, ...args); }
+  GreenBr(...args) { return this.asColor(92, ...args); }
+  YellowBr(...args) { return this.asColor(93, ...args); }
+  BlueBr(...args) { return this.asColor(94, ...args); }
+  MagentaBr(...args) { return this.asColor(95, ...args); }
+  CyanBr(...args) { return this.asColor(96, ...args); }
+  WhiteBr(...args) { return this.asColor(97, ...args); }
 
   Log(...args) {
     if (this.prefix) {
