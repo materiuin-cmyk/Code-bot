@@ -23,7 +23,7 @@ export class Handler {
     this.pluginDir = pluginDir ?? '../plugins';
     this.filters = filter;
     this.sock = null;
-    if (pen) pen = passPen;
+    if (passPen) pen = passPen;
 
     this.plugins = new Map();
     this.cmds = new Map();
