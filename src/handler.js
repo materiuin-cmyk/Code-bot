@@ -14,12 +14,12 @@ import { platform } from "os";
 import { pathToFileURL } from "url";
 import { Plugin } from "./plugin.js";
 import { Pen } from "./pen.js";
-import { GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, GROUPS_UPSERT, MESSAGES_REACTION, MESSAGES_UPSERT } from "./const.js";
+import { CONTACTS_UPDATE, CONTACTS_UPSERT, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, GROUPS_UPSERT, MESSAGES_REACTION, MESSAGES_UPSERT } from "./const.js";
 
 let pen = new Pen({ prefix: 'handler' });
 
 export class Handler {
-  constructor({ pluginDir, filter, pen: passPen }) {
+  constructor({ pluginDir, filter, pen: passPen, groupCache, contactCache, timerCache }) {
     this.pluginDir = pluginDir ?? '../plugins';
     this.filters = filter;
     this.sock = null;
@@ -28,6 +28,15 @@ export class Handler {
     this.plugins = new Map();
     this.cmds = new Map();
     this.listens = new Map();
+
+    /** @type {Map<string, import('baileys').GroupMetadata>} */
+    this.groupCache = groupCache ?? new Map();
+
+    /** @type {Map<string, import('baileys').Contact>} */
+    this.contactCache = contactCache ?? new Map();
+
+    /** @type {Map<string, number>} */
+    this.timerCache = timerCache ?? new Map();
 
     this.loadPlugin(this.pluginDir);
 
@@ -100,6 +109,8 @@ export class Handler {
    * @param {import('./context.js').Ctx} ctx
    */
   async handle(ctx) {
+    this.updateData(ctx);
+
     for (const listen of this.listens.values()) {
       try {
         /* Check rules and midware before exec */
@@ -115,6 +126,39 @@ export class Handler {
     }
   }
 
+  /**
+   * Handle update data 
+   *
+   * @param {import('./context.js').Ctx} ctx
+   */
+  async updateData(ctx) {
+    try {
+
+      switch (ctx.eventName) {
+        case GROUPS_UPSERT:
+        case GROUP_PARTICIAPANTS_UPDATE:
+        case GROUPS_UPDATE: {
+          pen.Warn('Updating', ctx.eventName);
+          const data = await this.sock.groupMetadata(ctx.chat);
+          if (data) this.groupCache.set(ctx.chat, data);
+
+          break;
+        }
+
+        case CONTACTS_UPDATE:
+        case CONTACTS_UPSERT: {
+          this.contactCache.set(ctx.sender, {
+            jid: ctx.sender,
+            name: ctx.pushName,
+          });
+          break;
+        }
+      }
+    } catch (e) {
+      pen.Error(e);
+    }
+  }
+
   /** 
   *
   * @param {import('baileys').WASocket} sock 
@@ -124,35 +168,93 @@ export class Handler {
 
     sock.ev.on(MESSAGES_UPSERT, (upsert) => {
       for (const msg of upsert.messages) {
-        const ctx = new Ctx({ eventName: MESSAGES_UPSERT, event: msg, eventType: upsert.type });
+        const ctx = new Ctx({
+          handler: this,
+          sock: sock,
+          eventName: MESSAGES_UPSERT,
+          event: msg,
+          eventType: upsert.type
+        });
         this.handle(ctx);
       }
     });
 
     sock.ev.on(MESSAGES_REACTION, (reactions) => {
       for (const msg of reactions) {
-        const ctx = new Ctx({ eventName: MESSAGES_REACTION, event: msg, eventType: reactions.type });
+        const ctx = new Ctx({
+          handler: this,
+          sock: sock,
+          eventName: MESSAGES_REACTION,
+          event: msg,
+          eventType: reactions.type
+        });
         this.handle(ctx);
       }
     });
 
     sock.ev.on(GROUPS_UPSERT, (upsert) => {
       for (const group of upsert) {
-        const ctx = new Ctx({ eventName: GROUPS_UPSERT, event: group, eventType: upsert.type });
+        const ctx = new Ctx({
+          handler: this,
+          sock: sock,
+          eventName: GROUPS_UPSERT,
+          event: group,
+          eventType: upsert.type
+        });
         this.handle(ctx);
       }
     });
 
     sock.ev.on(GROUPS_UPDATE, (update) => {
       for (const group of update) {
-        const ctx = new Ctx({ eventName: GROUPS_UPDATE, event: group, eventType: update.type });
+        const ctx = new Ctx({
+          handler: this,
+          sock: sock,
+          eventName: GROUPS_UPDATE,
+          event: group,
+          eventType: update.type
+        });
         this.handle(ctx);
       }
     });
 
     sock.ev.on(GROUP_PARTICIAPANTS_UPDATE, (update) => {
-      const ctx = new Ctx({ eventName: GROUP_PARTICIAPANTS_UPDATE, event: update, eventType: update.type });
+      const ctx = new Ctx({
+        handler: this,
+        sock: sock,
+        eventName: GROUP_PARTICIAPANTS_UPDATE,
+        event: update,
+        eventType: update.type
+      });
       this.handle(ctx);
-    })
+    });
+
+
+    sock.ev.on(CONTACTS_UPDATE, (update) => {
+      for (const contact of update) {
+        const ctx = new Ctx({
+          handler: this,
+          sock: sock,
+          eventName: CONTACTS_UPDATE,
+          event: contact,
+          eventType: update.type
+        });
+        this.handle(ctx);
+      }
+    });
+
+    sock.ev.on(CONTACTS_UPSERT, (upsert) => {
+      for (const contact of upsert) {
+        const ctx = new Ctx({
+          handler: this,
+          sock: sock,
+          eventName: CONTACTS_UPSERT,
+          event: contact,
+          eventType: upsert.type
+        });
+        this.handle(ctx);
+      }
+    });
+
   }
 }

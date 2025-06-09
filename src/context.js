@@ -8,7 +8,7 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
-import { GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, MESSAGES_REACTION } from './const.js';
+import { CONTACTS_UPDATE, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, MESSAGES_REACTION } from './const.js';
 import pen from './pen.js';
 
 const skipMessageTypes = [
@@ -84,6 +84,11 @@ export class Ctx {
       this.action = event.action;
     }
 
+    if (eventName === CONTACTS_UPDATE) {
+      this.sender = event.id;
+      this.pushName = event.notify;
+    }
+
     if (event.key) {
       this.id = event.key.id;
       this.fromMe = event.key.fromMe;
@@ -113,6 +118,9 @@ export class Ctx {
       this.remoteJid = event.reaction.key?.remoteJid;
       this.participant = event.reaction.key?.participant;
     }
+
+    this.chatName = this.jidName(this.chat) ?? '';
+    this.senderName = this.jidName(this.sender) ?? '';
   }
 
   async sendMessage(jid, content, options) {
@@ -132,6 +140,31 @@ export class Ctx {
   async replyRelay(content, options) {
     if (!this.chat) throw new Error('chat jid not provided');
     return await this.sock.relayMessage(this.chat, content, options);
+  }
+
+  jidName(jid) {
+    if (!jid || !this.handler || jid === '') return '';
+    pen.Warn(jid);
+
+
+    if (jid.endsWith('@g.us')) {
+
+      let data = this.handler.groupCache.get(jid);
+      if (!data) {
+        data = this.sock.groupMetadata(jid);
+        this.handler.groupCache.set(jid, data);
+      }
+      return data.subject;
+    } else if (jid.endsWith('@s.whatsapp.net')) {
+      const data = this.handler.contactCache.get(jid);
+      if (data) {
+        return data.name;
+      }
+    } else if (jid.endsWith('@newsletter')) {
+
+    }
+
+    return '';
   }
 
 }
