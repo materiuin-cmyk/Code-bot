@@ -12,9 +12,11 @@ import { Browsers, makeWASocket, useMultiFileAuthState } from "baileys";
 import readline from "node:readline";
 import pino from "pino";
 import QRCode from "qrcode";
-import pen from "./pen.js";
+import { Pen } from "./pen.js";
 import { DisconnectReason } from "baileys";
 import { CONNECTION_UPDATE, CREDS_UPDATE } from "./const.js";
+
+let pen = new Pen({ prefix: 'sys' });
 
 /* Initialize readline */
 const question = readline.createInterface({
@@ -67,7 +69,7 @@ export async function useStore(sessionStr) {
 export async function makeConnection(config) {
   if (!config) throw new Error('config is required');
   if (!config.session) throw new Error('session is required');
-  const pen = config.pen ?? pen;
+  if (config.pen) pen = config.pen;
 
   /** @type  {import('baileys').AuthenticationState, Promise<void> } */
   const { state, saveCreds } = await useStore(config.session)
