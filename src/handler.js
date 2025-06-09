@@ -78,16 +78,34 @@ export class Handler {
     }
   }
 
+  /** 
+   * Check if given pattern is a command
+   *
+   * @param {string} p
+   */
   async isCMD(p) {
     return this.cmds.has(p);
   }
 
+
+  /**
+   * Handle event and passed it to all plugins whether it is a command or a listener
+   *
+   * @param {import('./context.js').Ctx} ctx
+   */
   async handle(ctx) {
     for (const listen of this.listens.values()) {
-      if (!await listen.check(ctx)) {
-        continue;
+      try {
+        /* Check rules and midware before exec */
+        const passed = await listen.check(ctx);
+        if (!passed) {
+          continue;
+        }
+        /* Exec midware */
+        if (listen.exec) await listen.exec(ctx);
+      } catch (e) {
+        pen.Error(e);
       }
-      if (listen.exec) await listen.exec(ctx);
     }
   }
 
