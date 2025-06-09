@@ -147,7 +147,7 @@ export class Handler {
     }
 
     /* Handle commands */
-    if (ctx?.pattern) {
+    if (ctx?.pattern && ctx.eventType !== 'append') {
       const plugin = this.cmds.get(ctx.pattern.toLowerCase());
       if (plugin) {
         try {
