@@ -29,7 +29,6 @@ function connect() {
     handler: new Handler({
       pluginDir: process.cwd() + '/plugins',
     }),
-    pen: pen,
     retry: true
   })
 }
