@@ -72,7 +72,7 @@ export class Ctx {
     this.event = event;
     this.eventType = eventType;
 
-    this.timestamp = event.messageTimestamp ?? new Date().getTime();
+    this.timestamp = event.messageTimestamp ? event.messageTimestamp * 1000 : new Date().getTime();
 
     if (eventName === GROUPS_UPDATE) {
       this.chat = event.id;
@@ -162,7 +162,11 @@ export class Ctx {
       options.ephemeralExpiration = ephemeral;
     }
 
-    return await this.sock.sendMessage(jid, content, options)
+    try {
+      return await this.sock.sendMessage(jid, content, options);
+    } catch (e) {
+      pen.Error(e);
+    }
   }
 
   async relayMessage(jid, content, options) {
