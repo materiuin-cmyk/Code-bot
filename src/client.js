@@ -74,7 +74,6 @@ export async function makeConnection(config) {
   /** @type  {import('baileys').AuthenticationState, Promise<void> } */
   const { state, saveCreds } = await useStore(config.session)
 
-  const groupCache = new Map();
 
   /** {import('baileys').UserFacingSocketConfig } */
   const socketOptions = {
@@ -82,7 +81,6 @@ export async function makeConnection(config) {
     auth: state,
     browser: config.browser ? config.browser : Browsers.macOS('Safari'),
     logger: pino({ level: 'error' }),
-    cachedGroupMetadata: config?.groupCache ? async (jid) => config.groupCache.get(jid) : async (jid) => groupCache.get(jid),
   }
 
   if (config.socketOptions) {
@@ -98,7 +96,6 @@ export async function makeConnection(config) {
   }
 
   pen.Debug('Method :', config.method, ', Registered :', state?.creds?.registered, ', Platform :', state?.creds?.platform);
-  pen.Warn(config.method == 'otp', (!state?.creds?.registered && !state?.creds?.platform))
   if (config.method == 'otp' && (!state?.creds?.registered && !state?.creds?.platform)) {
 
     pen.Debug('Delay for 3000ms before requesting pairing code')
@@ -131,19 +128,27 @@ export async function makeConnection(config) {
     }
 
     if (connection === 'close') {
-      pen.Debug(CONNECTION_UPDATE, connection, lastDisconnect)
+      pen.Debug(CONNECTION_UPDATE, connection, lastDisconnect.error);
 
-      const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+      const statusCode = lastDisconnect?.error?.output?.statusCode;
+      const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
       if (shouldReconnect) {
         if (config.retry) {
-          pen.Debug(CONNECTION_UPDATE, 'Reconnecting...')
+          pen.Debug(CONNECTION_UPDATE, 'Reconnecting...');
           makeConnection(config)
         } else {
-          pen.Debug(CONNECTION_UPDATE, 'Not retrying')
+          pen.Debug(CONNECTION_UPDATE, 'Not retrying');
+        }
+      } else if (statusCode === DisconnectReason.loggedOut) {
+        pen.Debug(CONNECTION_UPDATE, 'Logged out, closing connection');
+        try {
+          /* Destroy session directory */
+        } catch (e) {
+          pen.Error(e);
         }
       }
     } else if (connection === 'open') {
-      pen.Debug(CONNECTION_UPDATE, connection, lastDisconnect)
+      pen.Debug(CONNECTION_UPDATE, connection, lastDisconnect);
     }
 
   });
