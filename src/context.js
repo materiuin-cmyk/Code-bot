@@ -152,9 +152,8 @@ export class Ctx {
   * @param {import('baileys').MessageGenerationOptions} options
   */
   async sendMessage(jid, content, options) {
-    if (!options) {
-      options = {};
-    }
+    if (!content) throw new Error('content not provided');
+    if (!options) options = {};
 
     if (!options.messageId) options.messageId = genHEX(32);
 
@@ -179,15 +178,22 @@ export class Ctx {
    * @param {import('baileys').MessageGenerationOptions} options
    */
   async relayMessage(jid, content, options) {
-    if (!options) {
-      options = {};
-    }
+    if (!content) throw new Error('content not provided');
+    if (!options) options = {};
 
     if (!options.messageId) options.messageId = genHEX(32);
 
     const ephemeral = this.handler?.getTimer(jid);
     if (ephemeral && ephemeral > 0) {
-      options.ephemeralExpiration = ephemeral;
+      for (let key in content) {
+        if (!content[key]) continue;
+
+        if (!content[key]?.contextInfo) {
+          content[key].contextInfo = { expiration: ephemeral };
+        } else {
+          content[key].contextInfo.expiration = ephemeral;
+        }
+      }
     }
 
     try {
