@@ -29,7 +29,8 @@ const wea = new Wangsaf({
   handler: new Handler({
     pluginDir: process.cwd() + '/plugins',
     groupCache: new StoreJson({ saveName: 'group_metadata.json', autoSave: true }),
-    // contactCache: new StoreJson({ saveName: 'contacts.json', autoSave: true }),
+    contactCache: new StoreJson({ saveName: 'contacts.json', autoSave: true }),
+    timerCache: new StoreJson({ saveName: 'timer.json', autoSave: true }),
   }),
   retry: true
 });
