@@ -14,6 +14,7 @@ export class Plugin {
     this.handler = null;
     this.sock = null;
 
+    /** @type {string | string[]}*/
     this.cmd = cmd;
     this.desc = desc;
     this.tags = tags;
