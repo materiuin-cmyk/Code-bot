@@ -24,6 +24,7 @@
   "homepage": "https://github.com/ginkohub/mushi#readme",
   "dependencies": {
     "baileys": "github:ginkohub/baileys#ginko",
+    "nodemon": "^3.1.10",
     "pino": "^9.7.0",
     "qrcode": "^1.5.4"
   },
