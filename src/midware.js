@@ -8,10 +8,11 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
-export async function midwareOr(...midwares) {
+export function midwareOr(...midwares) {
   return (ctx) => {
     for (let midware of midwares) {
-      if (midware(ctx)) {
+      const result = midware(ctx);
+      if (result) {
         return true;
       }
     }
@@ -19,10 +20,11 @@ export async function midwareOr(...midwares) {
   };
 }
 
-export async function midwareAnd(...midwares) {
+export function midwareAnd(...midwares) {
   return (ctx) => {
     for (let midware of midwares) {
-      if (!midware(ctx)) {
+      const result = midware(ctx);
+      if (!result) {
         return false;
       }
     }
@@ -30,21 +32,21 @@ export async function midwareAnd(...midwares) {
   };
 }
 
-export async function eventIs(...names) {
+export function eventNameIs(...names) {
   return (ctx) => {
     return names?.includes(ctx?.eventName);
   };
 }
 
-export async function fromMe(ctx) {
+export function fromMe(ctx) {
   return ctx?.fromMe;
 }
 
-export async function isGroup(ctx) {
+export function isGroup(ctx) {
   return ctx?.isGroup;
 }
 
-export async function isPrivate(ctx) {
+export function isPrivate(ctx) {
   return !ctx?.isGroup;
 }
 

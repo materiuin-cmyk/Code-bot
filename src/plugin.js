@@ -11,8 +11,8 @@
 
 export class Plugin {
   constructor({ cmd, desc, tags, disabled, timeout, noPrefix, midware, exec }) {
-    this.handler;
-    this.sock;
+    this.handler = null;
+    this.sock = null;
 
     this.cmd = cmd;
     this.desc = desc;
@@ -32,7 +32,7 @@ export class Plugin {
       if (diff < (this.timeout * 1000)) return false;
     }
 
-    if (this.midware) return this.midware(ctx);
+    if (this.midware) return await this.midware(ctx);
 
     return true;
   }
