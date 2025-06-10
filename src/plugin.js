@@ -61,7 +61,7 @@ export class Plugin {
 
     if (this.timeout > 0) {
       const diff = new Date().getTime() - ctx.timestamp;
-      if (diff < (this.timeout * 1000)) return false;
+      if (diff > (this.timeout * 1000)) return false;
     }
 
     if (this.midware) return await this.midware(ctx);
