@@ -120,7 +120,7 @@ export class Handler {
    *
    * @param {string} p
    */
-  async isCMD(p) {
+  isCMD(p) {
     return this.cmds.has(p);
   }
 
