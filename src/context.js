@@ -51,9 +51,10 @@ export function extactTextContext(m) {
 
     if (typeof m[key] === 'object') {
       if (!skipMessageTypes.includes(key)) resp.type = key;
-      if (m[key].caption?.length > 0) { resp.text = m[key].caption; }
-      if (m[key].text?.length > 0) { resp.text = m[key].text; }
-      if (m[key].contextInfo) { resp.contextInfo = m[key].contextInfo; }
+      if (m[key].caption?.length > 0) resp.text = m[key].caption;
+      if (m[key].text?.length > 0) resp.text = m[key].text;
+      if (m[key].selectedId?.length > 0) resp.text = m[key].selectedId;
+      if (m[key].contextInfo) resp.contextInfo = m[key].contextInfo;
     }
   }
 
@@ -130,6 +131,8 @@ export class Ctx {
       const splitted = this.text.split(' ');
       this.pattern = splitted[0];
       this.args = splitted.slice(1)?.join(' ');
+
+      this.isCMD = this.handler?.isCMD(this.pattern);
     }
 
     this.pushName = event?.pushName ?? this.pushName;
@@ -142,6 +145,9 @@ export class Ctx {
 
       this.fromMe = isOwnLID || this.fromMe;
     }
+
+    this.isGroup = this.chat?.endsWith('@g.us');
+    this.isStatus = this.chat === 'status@broadcast';
   }
 
   /** 
