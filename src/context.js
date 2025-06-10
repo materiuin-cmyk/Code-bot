@@ -11,7 +11,6 @@
 import { jidNormalizedUser } from 'baileys';
 import { CONTACTS_UPDATE, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE } from './const.js';
 import pen from './pen.js';
-import { genHEX } from './tools.js';
 
 const skipMessageTypes = [
   'messageContextInfo',
@@ -62,18 +61,16 @@ export function extactTextContext(m) {
 }
 
 export class Ctx {
-  constructor({ sock, handler, eventName, event, eventType }) {
-    /** @type {import('baileys').WASocket} */
-    this.sock = sock;
-
+  constructor({ handler, eventName, event, eventType }) {
     /** @type {import('./handler.js').Handler} */
     this.handler = handler;
+    this.getName = (jid) => this.handler?.getName(jid);
 
     this.eventName = eventName;
     this.event = event;
     this.eventType = eventType;
 
-    this.timestamp = event.messageTimestamp ? event.messageTimestamp * 1000 : new Date().getTime();
+    this.timestamp = event.messageTitmestamp ? event.messageTimestamp * 1000 : new Date().getTime();
 
     if (eventName === GROUPS_UPDATE) {
       this.chat = event.id;
@@ -106,7 +103,7 @@ export class Ctx {
       this.contextInfo = ext.contextInfo;
 
       this.quotedMessage = ext?.contextInfo?.quotedMessage;
-      const qext = extactTextContext(event.quotedMessage);
+      const qext = extactTextContext(this.quotedMessage);
       this.quotedText = qext.text;
       this.stanzaId = ext.contextInfo?.stanzaId;
       this.participant = ext.contextInfo?.participant;
@@ -140,7 +137,7 @@ export class Ctx {
     this.senderName = this.pushName ?? this.getName(this.sender) ?? this.sender;
 
     if (this.sender && this.sender?.endsWith('@lid')) {
-      const jidLID = jidNormalizedUser(this.sock?.user?.lid);
+      const jidLID = jidNormalizedUser(this.handler?.sock?.user?.lid);
       const isOwnLID = jidLID === this.sender;
 
       this.fromMe = isOwnLID || this.fromMe;
@@ -148,65 +145,6 @@ export class Ctx {
 
     this.isGroup = this.chat?.endsWith('@g.us');
     this.isStatus = this.chat === 'status@broadcast';
-  }
-
-  /** 
-  * Send message to given jid
-  *
-  * @param {string} jid
-  * @param {import('baileys').AnyMessageContent} content
-  * @param {import('baileys').MessageGenerationOptions} options
-  */
-  async sendMessage(jid, content, options) {
-    if (!content) throw new Error('content not provided');
-    if (!options) options = {};
-
-    if (!options.messageId) options.messageId = genHEX(32);
-
-    const ephemeral = this.handler?.getTimer(jid);
-    if (ephemeral && ephemeral > 0) {
-      options.ephemeralExpiration = ephemeral;
-    }
-
-    try {
-      return await this.sock.sendMessage(jid, content, options);
-    } catch (e) {
-      pen.Error(e);
-    }
-  }
-
-
-  /**
-   * Relay message to given jid
-   *
-   * @param {string} jid
-   * @param {import('baileys').proto.IMessage} content
-   * @param {import('baileys').MessageGenerationOptions} options
-   */
-  async relayMessage(jid, content, options) {
-    if (!content) throw new Error('content not provided');
-    if (!options) options = {};
-
-    if (!options.messageId) options.messageId = genHEX(32);
-
-    const ephemeral = this.handler?.getTimer(jid);
-    if (ephemeral && ephemeral > 0) {
-      for (let key in content) {
-        if (!content[key]) continue;
-
-        if (!content[key]?.contextInfo) {
-          content[key].contextInfo = { expiration: ephemeral };
-        } else {
-          content[key].contextInfo.expiration = ephemeral;
-        }
-      }
-    }
-
-    try {
-      return await this.sock.relayMessage(jid, content, options);
-    } catch (e) {
-      pen.Error(e);
-    }
   }
 
   /**
@@ -217,33 +155,17 @@ export class Ctx {
   async reply(content, options) {
     if (!this.chat) throw new Error('chat jid not provided');
 
-    return await this.sendMessage(this.chat, content, options);
+    return await this.handler?.sendMessage(this.chat, content, options);
   }
 
+  /**
+   *
+   * @param {import('baileys').AnyMessageContent} content
+  * @param {import('baileys').MessageGenerationOptions} options
+  */
   async replyRelay(content, options) {
     if (!this.chat) throw new Error('chat jid not provided');
-    return await this.sock.relayMessage(this.chat, content, options);
-  }
-
-  getName(jid) {
-    jid = jidNormalizedUser(jid);
-    if (!jid || !this.handler || jid === '') return null;
-
-    if (jid.endsWith('@g.us')) {
-      let data = this.handler.getGroupMetadata(jid);
-      return data?.subject;
-    } else if (jid.endsWith('@s.whatsapp.net')) {
-      const data = this.handler.getContact(jid);
-      if (data) {
-        return data.name;
-      }
-    } else if (jid.endsWith('@newsletter')) {
-
-    } else if (jid.endsWith('@lid')) {
-
-    }
-
-    return null;
+    return await this.handler?.relayMessage(this.chat, content, options);
   }
 
 }
