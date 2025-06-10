@@ -8,13 +8,15 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
-import { readdirSync, statSync } from "fs";
-import { Ctx } from "./context.js";
-import { platform } from "os";
-import { pathToFileURL } from "url";
-import { Plugin } from "./plugin.js";
-import { Pen } from "./pen.js";
-import { CONTACTS_UPDATE, CONTACTS_UPSERT, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, GROUPS_UPSERT, MESSAGES_REACTION, MESSAGES_UPSERT } from "./const.js";
+import { readdirSync, statSync } from 'fs';
+import { Ctx } from './context.js';
+import { platform } from 'os';
+import { pathToFileURL } from 'url';
+import { Plugin } from './plugin.js';
+import { Pen } from './pen.js';
+import { CONTACTS_UPDATE, CONTACTS_UPSERT, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, GROUPS_UPSERT, MESSAGES_REACTION, MESSAGES_UPSERT } from './const.js';
+import { jidNormalizedUser } from 'baileys';
+import { genHEX } from './tools.js';
 
 export class Handler {
   constructor({ pluginDir, filter, prefix, pen, groupCache, contactCache, timerCache }) {
@@ -106,7 +108,6 @@ export class Handler {
             }
           }
 
-
           this.pen.Debug(`Plugin loaded:`, loc)
         } catch (e) {
           this.pen.Error(loc, e);
@@ -127,41 +128,52 @@ export class Handler {
   /**
    * Handle event and passed it to all plugins whether it is a command or a listener
    *
-   * @param {import('./context.js').Ctx} ctx
+   * @param {{event: any, eventType: string, eventName: string}}
    */
-  async handle(ctx) {
-    this.updateData(ctx);
+  async handle({ event, eventType, eventName }) {
+    try {
+      const ctx = new Ctx({
+        handler: this,
+        eventName: eventName,
+        event: event,
+        eventType: eventType
+      });
 
-    for (const listen of this.listens.values()) {
-      try {
-        /* Check rules and midware before exec */
-        const passed = await listen.check(ctx);
-        if (!passed) {
-          continue;
-        }
-        /* Exec midware */
-        if (listen.exec) await listen.exec(ctx);
-      } catch (e) {
-        this.pen.Error(e);
-      }
-    }
+      this.updateData(ctx);
 
-    /* Handle commands */
-    if (ctx?.pattern && ctx?.eventType !== 'append' && ctx?.type !== 'senderKeyDistributionMessage') {
-      const plugin = this.cmds.get(ctx.pattern.toLowerCase());
-      if (plugin) {
+      for (const listen of this.listens.values()) {
         try {
           /* Check rules and midware before exec */
-          const passed = await plugin.check(ctx);
+          const passed = await listen.check(ctx);
           if (!passed) {
-            return;
+            continue;
           }
           /* Exec midware */
-          if (plugin.exec) await plugin.exec(ctx);
+          if (listen.exec) await listen.exec(ctx);
         } catch (e) {
           this.pen.Error(e);
         }
       }
+
+      /* Handle commands */
+      if (ctx?.pattern && ctx?.eventType !== 'append' && ctx?.type !== 'senderKeyDistributionMessage') {
+        const plugin = this.cmds.get(ctx.pattern.toLowerCase());
+        if (plugin) {
+          try {
+            /* Check rules and midware before exec */
+            const passed = await plugin.check(ctx);
+            if (!passed) {
+              return;
+            }
+            /* Exec midware */
+            if (plugin.exec) await plugin.exec(ctx);
+          } catch (e) {
+            this.pen.Error(e);
+          }
+        }
+      }
+    } catch (e) {
+      this.pen.Error(e);
     }
   }
 
@@ -209,93 +221,44 @@ export class Handler {
   async attach(sock) {
     this.sock = sock;
 
-    sock.ev.on(MESSAGES_UPSERT, (upsert) => {
-      for (const msg of upsert.messages) {
-        const ctx = new Ctx({
-          handler: this,
-          sock: sock,
-          eventName: MESSAGES_UPSERT,
-          event: msg,
-          eventType: upsert.type
-        });
-        this.handle(ctx);
+    sock.ev.on(MESSAGES_UPSERT, (update) => {
+      for (const event of update.messages) {
+        this.handle({ eventName: MESSAGES_UPSERT, event: event, eventType: update.type });
       }
     });
 
-    sock.ev.on(MESSAGES_REACTION, (reactions) => {
-      for (const msg of reactions) {
-        const ctx = new Ctx({
-          handler: this,
-          sock: sock,
-          eventName: MESSAGES_REACTION,
-          event: msg,
-          eventType: reactions.type
-        });
-        this.handle(ctx);
+    sock.ev.on(MESSAGES_REACTION, (update) => {
+      for (const event of update) {
+        this.handle({ eventName: MESSAGES_REACTION, event: event, eventType: update.type });
       }
     });
 
-    sock.ev.on(GROUPS_UPSERT, (upsert) => {
-      for (const group of upsert) {
-        const ctx = new Ctx({
-          handler: this,
-          sock: sock,
-          eventName: GROUPS_UPSERT,
-          event: group,
-          eventType: upsert.type
-        });
-        this.handle(ctx);
+    sock.ev.on(GROUPS_UPSERT, (update) => {
+      for (const event of update) {
+        this.handle({ eventName: GROUPS_UPSERT, event: event, eventType: update.type });
       }
     });
 
     sock.ev.on(GROUPS_UPDATE, (update) => {
-      for (const group of update) {
-        const ctx = new Ctx({
-          handler: this,
-          sock: sock,
-          eventName: GROUPS_UPDATE,
-          event: group,
-          eventType: update.type
-        });
-        this.handle(ctx);
+      for (const event of update) {
+        this.handle({ eventName: GROUPS_UPDATE, event: event, eventType: update.type });
       }
     });
 
-    sock.ev.on(GROUP_PARTICIAPANTS_UPDATE, (update) => {
-      const ctx = new Ctx({
-        handler: this,
-        sock: sock,
-        eventName: GROUP_PARTICIAPANTS_UPDATE,
-        event: update,
-        eventType: update.type
-      });
-      this.handle(ctx);
+    sock.ev.on(GROUP_PARTICIAPANTS_UPDATE, (event) => {
+      this.handle({ eventName: GROUP_PARTICIAPANTS_UPDATE, event: event, eventType: event.type });
     });
 
 
     sock.ev.on(CONTACTS_UPDATE, (update) => {
-      for (const contact of update) {
-        const ctx = new Ctx({
-          handler: this,
-          sock: sock,
-          eventName: CONTACTS_UPDATE,
-          event: contact,
-          eventType: update.type
-        });
-        this.handle(ctx);
+      for (const event of update) {
+        this.handle({ eventName: CONTACTS_UPDATE, event: event, eventType: update.type });
       }
     });
 
-    sock.ev.on(CONTACTS_UPSERT, (upsert) => {
-      for (const contact of upsert) {
-        const ctx = new Ctx({
-          handler: this,
-          sock: sock,
-          eventName: CONTACTS_UPSERT,
-          event: contact,
-          eventType: upsert.type
-        });
-        this.handle(ctx);
+    sock.ev.on(CONTACTS_UPSERT, (update) => {
+      for (const event of update) {
+        this.handle({ eventName: CONTACTS_UPSERT, event: event, eventType: update.type });
       }
     });
   }
@@ -339,4 +302,86 @@ export class Handler {
   getTimer(jid) {
     return this.timerCache.get(jid);
   }
+
+  getName(jid) {
+    jid = jidNormalizedUser(jid);
+    if (!jid || jid === '') return null;
+
+    if (jid.endsWith('@g.us')) {
+      let data = this.getGroupMetadata(jid);
+      return data?.subject;
+    } else if (jid.endsWith('@s.whatsapp.net')) {
+      const data = this.getContact(jid);
+      if (data) {
+        return data.name;
+      }
+    } else if (jid.endsWith('@newsletter')) {
+
+    } else if (jid.endsWith('@lid')) {
+
+    }
+
+    return null;
+  }
+
+
+  /** 
+  * Send message to given jid
+  *
+  * @param {string} jid
+  * @param {import('baileys').AnyMessageContent} content
+  * @param {import('baileys').MessageGenerationOptions} options
+  */
+  async sendMessage(jid, content, options) {
+    if (!content) throw new Error('content not provided');
+    if (!options) options = {};
+
+    if (!options.messageId) options.messageId = genHEX(32);
+
+    const ephemeral = this.getTimer(jid);
+    if (ephemeral && ephemeral > 0) {
+      options.ephemeralExpiration = ephemeral;
+    }
+
+    try {
+      return await this.sock.sendMessage(jid, content, options);
+    } catch (e) {
+      pen.Error(e);
+    }
+  }
+
+
+  /**
+   * Relay message to given jid
+   *
+   * @param {string} jid
+   * @param {import('baileys').proto.IMessage} content
+   * @param {import('baileys').MessageGenerationOptions} options
+   */
+  async relayMessage(jid, content, options) {
+    if (!content) throw new Error('content not provided');
+    if (!options) options = {};
+
+    if (!options.messageId) options.messageId = genHEX(32);
+
+    const ephemeral = this.getTimer(jid);
+    if (ephemeral && ephemeral > 0) {
+      for (let key in content) {
+        if (!content[key]) continue;
+
+        if (!content[key]?.contextInfo) {
+          content[key].contextInfo = { expiration: ephemeral };
+        } else {
+          content[key].contextInfo.expiration = ephemeral;
+        }
+      }
+    }
+
+    try {
+      return await this.sock.relayMessage(jid, content, options);
+    } catch (e) {
+      pen.Error(e);
+    }
+  }
+
 }
