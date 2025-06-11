@@ -49,6 +49,7 @@ export class Handler {
   /** @param {import('./plugin.js').Plugin} opts */
   async on(...opts) {
     for (const opt of opts) {
+      if (!opt.exec) continue;
       const plugin = new Plugin(opt);
       if (plugin.cmd) {
         let precmds = [];
