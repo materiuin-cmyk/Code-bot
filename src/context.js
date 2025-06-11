@@ -10,7 +10,6 @@
 
 import { jidNormalizedUser } from 'baileys';
 import { CONTACTS_UPDATE, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE } from './const.js';
-import pen from './pen.js';
 
 const skipMessageTypes = [
   'messageContextInfo',
