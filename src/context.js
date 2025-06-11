@@ -70,7 +70,7 @@ export class Ctx {
     this.event = event;
     this.eventType = eventType;
 
-    this.timestamp = event.messageTitmestamp ? event.messageTimestamp * 1000 : new Date().getTime();
+    this.timestamp = event.messageTimestamp ? event.messageTimestamp * 1000 : new Date().getTime();
 
     if (eventName === GROUPS_UPDATE) {
       this.chat = event.id;
