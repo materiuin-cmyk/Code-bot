@@ -23,6 +23,7 @@ export class Handler {
     this.pluginDir = pluginDir ?? '../plugins';
     this.filters = filter;
     this.sock = null;
+    this.client = null;
 
     /** @type {import('./pen.js').Pen)} */
     this.pen = pen ?? new Pen({ prefix: 'hand' });
@@ -237,8 +238,9 @@ export class Handler {
   *
   * @param {import('baileys').WASocket} sock 
   */
-  async attach(sock) {
+  async attach(sock, client) {
     this.sock = sock;
+    this.client = client;
 
     sock.ev.on(MESSAGES_UPSERT, (update) => {
       for (const event of update.messages) {
