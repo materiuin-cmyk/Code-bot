@@ -29,8 +29,13 @@ export class Handler {
 
     this.prefix = prefix ?? './';
 
+    /** @type {Map<number, import('./plugin.js').Plugin>} */
     this.plugins = new Map();
+
+    /** @type {Map<string, number>} */
     this.cmds = new Map();
+
+    /** @type {Map<number, number>} */
     this.listens = new Map();
 
     /** @type {Map<string, import('baileys').GroupMetadata>} */
@@ -49,8 +54,14 @@ export class Handler {
   /** @param {import('./plugin.js').Plugin} opts */
   async on(...opts) {
     for (const opt of opts) {
+      /* Check if plugin hasn't exec */
       if (!opt.exec) continue;
+
       const plugin = new Plugin(opt);
+      const newid = this.plugins.size;
+      this.plugins.set(newid, plugin);
+
+      /* Check if plugin has cmd, so it is a command plugin */
       if (plugin.cmd) {
         let precmds = [];
         if (Array.isArray(plugin.cmd)) {
@@ -71,10 +82,10 @@ export class Handler {
         }
 
         for (const cmd of cmds) {
-          this.cmds.set(cmd.toLowerCase(), plugin);
+          this.cmds.set(cmd.toLowerCase(), newid);
         }
       } else {
-        this.listens.set(this.listens.size, plugin);
+        this.listens.set(this.listens.size, newid);
       }
     }
   }
@@ -142,14 +153,18 @@ export class Handler {
 
       this.updateData(ctx);
 
-      for (const listen of this.listens.values()) {
+      for (const lsid of this.listens.values()) {
         try {
+          const listen = this.plugins.get(lsid);
+          if (!listen) continue;
+
           /* Check rules and midware before exec */
           const passed = await listen.check(ctx);
           if (!passed) {
             continue;
           }
-          /* Exec midware */
+
+          /* Exec */
           if (listen.exec) await listen.exec(ctx);
         } catch (e) {
           this.pen.Error(e);
@@ -158,7 +173,9 @@ export class Handler {
 
       /* Handle commands */
       if (ctx?.pattern && ctx?.eventType !== 'append' && ctx?.type !== 'senderKeyDistributionMessage') {
-        const plugin = this.cmds.get(ctx.pattern.toLowerCase());
+        const pid = this.cmds.get(ctx.pattern.toLowerCase());
+        if (!pid) return;
+        const plugin = this.plugins.get(pid);
         if (plugin) {
           try {
             /* Check rules and midware before exec */
@@ -166,7 +183,8 @@ export class Handler {
             if (!passed) {
               return;
             }
-            /* Exec midware */
+
+            /* Exec */
             if (plugin.exec) await plugin.exec(ctx);
           } catch (e) {
             this.pen.Error(e);
