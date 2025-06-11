@@ -367,7 +367,7 @@ export class Handler {
     try {
       return await this.sock.sendMessage(jid, content, options);
     } catch (e) {
-      pen.Error(e);
+      this.pen.Error(e);
     }
   }
 
