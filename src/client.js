@@ -69,6 +69,8 @@ export class Wangsaf {
     this.socketOptions = socketOptions;
     this.retry = retry;
     this.pen = pen ?? new Pen({ prefix: 'sys' });
+    this.dateCreated = new Date();
+    this.dateStarted = null;
   }
 
   /**
@@ -76,12 +78,12 @@ export class Wangsaf {
    */
   async connect() {
     if (!this.session) throw new Error('session is required');
+    this.dateStarted = new Date();
 
-    /** @type  {import('baileys').AuthenticationState, Promise<void> } */
+    /** @type {import('baileys').AuthenticationState, Promise<void> } */
     const { state, saveCreds } = await useStore(this.session)
 
-
-    /** {import('baileys').UserFacingSocketConfig } */
+    /** @type {import('baileys').UserFacingSocketConfig} */
     const socketOptions = {
       syncFullHistory: false,
       auth: state,
@@ -125,7 +127,6 @@ export class Wangsaf {
       let code = await sock.requestPairingCode(phone);
       if (code) this.pen.Log('Enter this OTP :', code)
     }
-
 
     sock.ev.on(CONNECTION_UPDATE, async (update) => {
       const { connection, lastDisconnect, qr } = update;
