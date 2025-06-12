@@ -13,7 +13,20 @@ import { BotDetector } from '../../src/detector.js';
 import pen from '../../src/pen.js';
 import { formatElapse } from '../../src/tools.js';
 
-const storeID = new Map();
+const storeID = [];
+function hasID(c) {
+  const key = `${c.sender}_${c.id}`
+  if (storeID.indexOf(key) > -1) {
+    return true;
+  } else {
+    if (storeID.length > 100) {
+      storeID.shift();
+    }
+    storeID.push(key);
+    return false;
+
+  }
+}
 const detect = new BotDetector({ delay: 2000 });
 
 /** @type {import('../../src/plugin.js').Plugin} */
@@ -34,10 +47,8 @@ export default {
         /* Indicator section */
         if (c.isCMD) data.push('⚡');
         if (c.id && c.type !== 'senderKeyDistributionMessage') {
-          if (storeID.has(c.id)) {
+          if (hasID(c)) {
             data.push('⚠️', '');
-          } else {
-            storeID.set(c.id, c.senderName);
           }
         }
         if (detect.isBot(c)) data.push('🤖');
