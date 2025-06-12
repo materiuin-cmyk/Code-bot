@@ -131,11 +131,26 @@ export class Handler {
   }
 
   /** 
+   *
+   * Get command by pattern
+   *
+   * @param {string} p
+   */
+  getCMD(p) {
+    if (!p) return;
+    p = p.toLowerCase();
+    const cid = this.cmds.get(p);
+    if (!cid) return;
+    return this.plugins.get(cid);
+  }
+
+  /** 
    * Check if given pattern is a command
    *
    * @param {string} p
    */
   isCMD(p) {
+    p = p.toLowerCase();
     return this.cmds.has(p);
   }
 
@@ -345,7 +360,6 @@ export class Handler {
     return null;
   }
 
-
   /** 
   * Send message to given jid
   *
@@ -370,7 +384,6 @@ export class Handler {
       this.pen.Error(e);
     }
   }
-
 
   /**
    * Relay message to given jid
