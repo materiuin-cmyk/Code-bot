@@ -13,6 +13,7 @@ import pen from "./src/pen.js";
 import { Wangsaf } from "./src/client.js";
 import { Handler } from "./src/handler.js";
 import { StoreJson } from "./src/store.js";
+import { getFile } from "./src/data.js";
 
 /* Load environment variables from .env file */
 try {
@@ -28,9 +29,9 @@ const wea = new Wangsaf({
   session: process.env.SESSION ?? 'sesi',
   handler: new Handler({
     pluginDir: process.cwd() + '/plugins',
-    groupCache: new StoreJson({ saveName: 'group_metadata.json', autoSave: true }),
-    contactCache: new StoreJson({ saveName: 'contacts.json', autoSave: true }),
-    timerCache: new StoreJson({ saveName: 'timer.json', autoSave: true }),
+    groupCache: new StoreJson({ saveName: getFile('group_metadata.json'), autoSave: true }),
+    contactCache: new StoreJson({ saveName: getFile('contacts.json'), autoSave: true }),
+    timerCache: new StoreJson({ saveName: getFile('timer.json'), autoSave: true }),
   }),
   retry: true
 });
