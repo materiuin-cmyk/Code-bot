@@ -38,7 +38,7 @@ export default {
         if (stderr) {
           c.reply({ text: stderr.message });
         }
-        if (stdout) {
+        if (stdout && stdout?.length > 0) {
           c.reply({ text: stdout });
         }
       });
