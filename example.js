@@ -9,10 +9,10 @@
  */
 
 import { loadEnvFile } from "process";
-import pen from "./pen.js";
-import { Wangsaf } from "./client.js";
-import { Handler } from "./handler.js";
-import { StoreJson } from "./store.js";
+import pen from "./src/pen.js";
+import { Wangsaf } from "./src/client.js";
+import { Handler } from "./src/handler.js";
+import { StoreJson } from "./src/store.js";
 
 /* Load environment variables from .env file */
 try {
