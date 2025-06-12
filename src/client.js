@@ -60,11 +60,14 @@ export class Wangsaf {
     retry,
     pen
   }) {
+    this.sock = null;
     this.session = session;
     this.dataDir = dataDir;
     this.phone = phone;
     this.method = method;
     this.browser = browser;
+
+    /** @type {import('./handler.js').Handler} */
     this.handler = handler;
     this.socketOptions = socketOptions;
     this.retry = retry;
@@ -96,10 +99,10 @@ export class Wangsaf {
     }
 
     /** @type {import('baileys').WASocket} */
-    const sock = makeWASocket(socketOptions)
+    this.sock = makeWASocket(socketOptions)
     if (this.handler) {
       if (this.handler.attach) {
-        this.handler.attach(sock, this);
+        this.handler.attach(this);
       }
     }
 
@@ -124,11 +127,11 @@ export class Wangsaf {
       this.pen.Debug(`Using this phone : ${phone}`);
 
 
-      let code = await sock.requestPairingCode(phone);
+      let code = await this.sock.requestPairingCode(phone);
       if (code) this.pen.Log('Enter this OTP :', code)
     }
 
-    sock.ev.on(CONNECTION_UPDATE, async (update) => {
+    this.sock.ev.on(CONNECTION_UPDATE, async (update) => {
       const { connection, lastDisconnect, qr } = update;
       if (qr && this.method == 'qr') {
         this.pen.Log('Scan this QR :\n', await QRCode.toString(qr, { type: 'terminal', small: true }))
@@ -159,6 +162,6 @@ export class Wangsaf {
       }
     });
 
-    sock.ev.on(CREDS_UPDATE, saveCreds);
+    this.sock.ev.on(CREDS_UPDATE, saveCreds);
   }
 }

@@ -136,7 +136,7 @@ export class Ctx {
     this.senderName = this.pushName ?? this.getName(this.sender) ?? this.sender;
 
     if (this.sender && this.sender?.endsWith('@lid')) {
-      const jidLID = jidNormalizedUser(this.handler?.sock?.user?.lid);
+      const jidLID = jidNormalizedUser(this.handler?.client?.sock?.user?.lid);
       const isOwnLID = jidLID === this.sender;
 
       this.fromMe = isOwnLID || this.fromMe;

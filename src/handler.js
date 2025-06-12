@@ -22,7 +22,8 @@ export class Handler {
   constructor({ pluginDir, filter, prefix, pen, groupCache, contactCache, timerCache }) {
     this.pluginDir = pluginDir ?? '../plugins';
     this.filters = filter;
-    this.sock = null;
+
+    /** @type {import('./client.js').Wangsaf} */
     this.client = null;
 
     /** @type {import('./pen.js').Pen)} */
@@ -238,46 +239,45 @@ export class Handler {
   *
   * @param {import('baileys').WASocket} sock 
   */
-  async attach(sock, client) {
-    this.sock = sock;
+  async attach(client) {
     this.client = client;
 
-    sock.ev.on(MESSAGES_UPSERT, (update) => {
+    this.client.sock.ev.on(MESSAGES_UPSERT, (update) => {
       for (const event of update.messages) {
         this.handle({ eventName: MESSAGES_UPSERT, event: event, eventType: update.type });
       }
     });
 
-    sock.ev.on(MESSAGES_REACTION, (update) => {
+    this.client.sock.ev.on(MESSAGES_REACTION, (update) => {
       for (const event of update) {
         this.handle({ eventName: MESSAGES_REACTION, event: event, eventType: update.type });
       }
     });
 
-    sock.ev.on(GROUPS_UPSERT, (update) => {
+    this.client.sock.ev.on(GROUPS_UPSERT, (update) => {
       for (const event of update) {
         this.handle({ eventName: GROUPS_UPSERT, event: event, eventType: update.type });
       }
     });
 
-    sock.ev.on(GROUPS_UPDATE, (update) => {
+    this.client.sock.ev.on(GROUPS_UPDATE, (update) => {
       for (const event of update) {
         this.handle({ eventName: GROUPS_UPDATE, event: event, eventType: update.type });
       }
     });
 
-    sock.ev.on(GROUP_PARTICIAPANTS_UPDATE, (event) => {
+    this.client.sock.ev.on(GROUP_PARTICIAPANTS_UPDATE, (event) => {
       this.handle({ eventName: GROUP_PARTICIAPANTS_UPDATE, event: event, eventType: event.type });
     });
 
 
-    sock.ev.on(CONTACTS_UPDATE, (update) => {
+    this.client.sock.ev.on(CONTACTS_UPDATE, (update) => {
       for (const event of update) {
         this.handle({ eventName: CONTACTS_UPDATE, event: event, eventType: update.type });
       }
     });
 
-    sock.ev.on(CONTACTS_UPSERT, (update) => {
+    this.client.sock.ev.on(CONTACTS_UPSERT, (update) => {
       for (const event of update) {
         this.handle({ eventName: CONTACTS_UPSERT, event: event, eventType: update.type });
       }
@@ -286,7 +286,7 @@ export class Handler {
 
   async updateGroupMetadata(jid) {
     try {
-      const data = await this.sock.groupMetadata(jid);
+      const data = await this.client.sock.groupMetadata(jid);
       if (data) this.groupCache.set(jid, data);
     } catch (e) {
       this.pen.Error(e);
@@ -365,7 +365,7 @@ export class Handler {
     }
 
     try {
-      return await this.sock.sendMessage(jid, content, options);
+      return await this.client.sock.sendMessage(jid, content, options);
     } catch (e) {
       this.pen.Error(e);
     }
@@ -399,7 +399,7 @@ export class Handler {
     }
 
     try {
-      return await this.sock.relayMessage(jid, content, options);
+      return await this.client.sock.relayMessage(jid, content, options);
     } catch (e) {
       pen.Error(e);
     }
