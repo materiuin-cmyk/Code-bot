@@ -20,7 +20,7 @@ export default {
   timeout: 15,
   cat: 'system',
   tags: ['system'],
-  desc: 'Evaluate JavaScript code',
+  desc: 'Execute command shell command',
 
   midware: midwareAnd(
     eventNameIs(MESSAGES_UPSERT), fromMe,
