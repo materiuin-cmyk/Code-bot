@@ -45,7 +45,13 @@ export default {
         const data = [];
 
         /* Indicator section */
-        if (c.isCMD) data.push('⚡');
+        if (c.isCMD) {
+          data.push('⚡');
+
+          const cmd = c.handler?.getCMD(c.pattern);
+          if (!cmd.check(c)) data.push('❌');
+        }
+
         if (c.id && c.type !== 'senderKeyDistributionMessage') {
           if (hasID(c)) {
             data.push('⚠️', '');
