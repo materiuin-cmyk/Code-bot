@@ -29,7 +29,7 @@ export class Plugin {
     this.tags = tags;
 
     /** @type {string} */
-    this.category = cat ?? 'uncategorized';
+    this.category = (cat && cat !== '') ? cat : 'uncategorized';
 
     /** @type {boolean} */
     this.disabled = disabled;
