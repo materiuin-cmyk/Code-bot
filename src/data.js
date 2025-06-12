@@ -23,7 +23,7 @@ function checkDataDir(targetDir) {
   try {
     fs.mkdirSync(targetDir);
   } catch (e) {
-    pen.Debug(e.message);
+    /* pen.Debug(e.message); */
   }
 }
 
