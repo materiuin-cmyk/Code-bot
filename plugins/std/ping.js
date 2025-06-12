@@ -28,7 +28,7 @@ export default {
   exec: async (c) => {
     const current = new Date().getTime();
     const est = Math.floor(current - c.timestamp);
-    c.reply({ text: `⏱️ ${formatElapse(est)}\n\nCurrent : ${current}\nChat : ${c.timestamp}` });
+    c.reply({ text: `⏱️ ${formatElapse(est)}\n\nServer : ${current}\nWhatsApp : ${c.timestamp}` });
   }
 };
 
