@@ -10,5 +10,5 @@
     "*.test.js",
     "node_modules/*"
   ],
-  "exec": "node src/app.js"
+  "exec": "node example.js"
 }
