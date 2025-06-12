@@ -2,7 +2,6 @@
   "name": "mushi",
   "version": "0.0.1",
   "description": "Wangsaf bot",
-  "main": "src/app.js",
   "type": "module",
   "scripts": {
     "dev": "nodemon",
