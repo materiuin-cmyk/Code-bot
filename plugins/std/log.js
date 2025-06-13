@@ -45,6 +45,8 @@ export default {
         const data = [];
 
         /* Indicator section */
+        if (c.isAdmin) data.push('🛡️', '');
+
         if (c.isCMD) {
           data.push('⚡');
 
