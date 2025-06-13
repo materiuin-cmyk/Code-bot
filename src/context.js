@@ -144,6 +144,17 @@ export class Ctx {
 
     this.isGroup = this.chat?.endsWith('@g.us');
     this.isStatus = this.chat === 'status@broadcast';
+
+    if (this.isGroup) {
+      const data = this.handler?.getGroupMetadata(this.chat);
+      if (data) {
+        for (const part of data.participants) {
+          if (this.sender == part.jid || this.sender == part.lid || this.sender == part.id) {
+            this.isAdmin = part.admin?.includes('admin');
+          }
+        }
+      }
+    }
   }
 
   /**
