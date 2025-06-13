@@ -252,7 +252,7 @@ export class Handler {
 
   /** 
   *
-  * @param {import('baileys').WASocket} sock 
+  * @param {import('./client.js').Wangsaf} client 
   */
   async attach(client) {
     this.client = client;
