@@ -14,6 +14,7 @@ import { Wangsaf } from "./src/client.js";
 import { Handler } from "./src/handler.js";
 import { StoreJson } from "./src/store.js";
 import { getFile } from "./src/data.js";
+import { Browsers } from "baileys";
 
 /* Load environment variables from .env file */
 try {
@@ -27,6 +28,7 @@ const wea = new Wangsaf({
   phone: process.env.PHONE ?? '',
   method: process.env.METHOD ?? 'otp',
   session: process.env.SESSION ?? 'sesi',
+  browser: Browsers.macOS(process.env.BROWSER ?? 'Safari'),
   handler: new Handler({
     pluginDir: process.cwd() + '/plugins',
     groupCache: new StoreJson({ saveName: getFile('group_metadata.json'), autoSave: true }),
