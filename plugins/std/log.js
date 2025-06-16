@@ -51,7 +51,7 @@ export default {
           data.push('⚡');
 
           const cmd = c.handler?.getCMD(c.pattern);
-          if (!cmd.check(c)) data.push('❌');
+          if (!cmd?.check(c)) data.push('❌');
         }
 
         if (c.id && c.type !== 'senderKeyDistributionMessage') {
