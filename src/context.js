@@ -64,6 +64,8 @@ export class Ctx {
     /** @type {import('./handler.js').Handler} */
     this.handler = handler;
     this.getName = (jid) => this.handler?.getName(jid);
+    this.sendMessage = (jid, content, options) => this.handler?.sendMessage(jid, content, options);
+    this.relayMessage = (jid, content, options) => this.handler?.relayMessage(jid, content, options);
 
     this.eventName = eventName;
     this.event = event;
