@@ -97,7 +97,7 @@ export default {
         if (c.isCMD) {
           data.push('⚡');
 
-          const cmd = c.handler?.getCMD(c.pattern);
+          const cmd = c.handler()?.getCMD(c.pattern);
           if (!cmd?.check(c)) data.push('❌');
         }
 
