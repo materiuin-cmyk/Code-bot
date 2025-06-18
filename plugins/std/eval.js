@@ -10,7 +10,6 @@
 
 import { MESSAGES_UPSERT } from '../../src/const.js';
 import { eventNameIs, fromMe, midwareAnd } from '../../src/midware.js';
-import pen from '../../src/pen.js';
 
 /** @type {import('../../src/plugin.js').Plugin} */
 export default {
