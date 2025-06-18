@@ -8,7 +8,7 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
-import { CONTACTS_UPDATE, MESSAGES_REACTION, MESSAGES_UPSERT } from '../../src/const.js';
+import { CONTACTS_UPDATE, MESSAGES_REACTION, MESSAGES_UPSERT, PRESENCE_UPDATE } from '../../src/const.js';
 import { BotDetector } from '../../src/detector.js';
 import pen from '../../src/pen.js';
 import { formatElapse } from '../../src/tools.js';
@@ -62,10 +62,34 @@ export default {
 
   /** @param {import('../../src/context.js').Ctx} c */
   exec: async (c) => {
+    const data = [];
+    const chatName = cleanName(c.chatName);
+    const senderName = cleanName(c.senderName);
+
     switch (c.eventName) {
+      case PRESENCE_UPDATE: {
+        switch (c.presence) {
+          case 'composing': {
+            data.push('✍️', '');
+            break;
+          }
+          case 'recording': {
+            data.push('🎤')
+            break;
+          }
+        }
+
+        data.push(
+          pen.Blue(chatName),
+          '<',
+          pen.Red(senderName),
+        );
+
+        break;
+      }
+
       case MESSAGES_REACTION:
       case MESSAGES_UPSERT: {
-        const data = [];
 
         /* Indicator section */
         if (c.isAdmin) data.push('🛡️', '');
@@ -91,10 +115,6 @@ export default {
         if (c.stanzaId) data.push(sliceStr(c.stanzaId, 8, '-'), '<<');
         data.push(sliceStr(c.id, 8, '-'));
 
-
-        const chatName = cleanName(c.chatName);
-        const senderName = cleanName(c.senderName);
-
         data.push(
           pen.GreenBr(c.type?.replaceAll('Message', '')),
           pen.Blue(chatName),
@@ -103,13 +123,13 @@ export default {
           c.text?.slice(0, 100).replaceAll('\n', ' ') || ''
         );
 
-        pen.Info(...data);
-
         break;
       }
       default:
-        pen.Info(c.eventName);
+        data.push(c.eventName);
     }
+
+    if (data.length > 0) pen.Info(...data);
   }
 };
 
