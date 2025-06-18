@@ -72,3 +72,21 @@ export function formatElapse(elapse) {
   return est
 }
 
+/**
+ * Delay execution of a function for a given number of milliseconds
+ * @param {number} ms - Number of milliseconds to delay
+ * @returns {Promise} - Promise that resolves after the delay
+ */
+export function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Generate a random number between min and max (inclusive)
+ * @param {number} min - Minimum value
+ * @param {number} max - Maximum value
+ * @returns {number} - Random number between min and max
+ */
+export function randomNumber(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
