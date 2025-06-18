@@ -55,7 +55,7 @@ export class StoreJson {
   }
 
   delete(key) {
-    this.data;
+    delete this.data[key];
     this.saveCheck();
   }
 
@@ -66,5 +66,9 @@ export class StoreJson {
 
   keys() {
     return this.data.keys();
+  }
+
+  has(key) {
+    return key in this.data;
   }
 }
