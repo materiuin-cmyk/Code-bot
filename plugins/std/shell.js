@@ -36,10 +36,10 @@ export default {
       /* Execute shell command */
       exec(src, (error, stdout, stderr) => {
         if (stderr) {
-          c.reply({ text: stderr.message });
+          c.reply({ text: `${stderr}` });
         }
         if (stdout && stdout?.length > 0) {
-          c.reply({ text: stdout });
+          c.reply({ text: `${stdout}` });
         }
       });
     } catch (e) {
