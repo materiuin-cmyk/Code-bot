@@ -11,12 +11,12 @@
 import { MESSAGES_UPSERT } from '../../../src/const.js';
 import { eventNameIs, fromMe, midwareAnd } from '../../../src/midware.js';
 import pen from '../../../src/pen.js';
-import { gemini } from './gemini.js';
 import { StoreJson } from '../../../src/store.js';
 import { getFile } from '../../../src/data.js';
 import { extactTextContext } from '../../../src/context.js';
-import { hashCRC32 } from '../../../src/tools.js';
 import { downloadMediaMessage } from 'baileys';
+
+const gemini = await import(`./gemini.js?t=${new Date()}`).then(m => m.gemini);
 
 const chatWatch = new StoreJson({
   autoSave: true,
