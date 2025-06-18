@@ -9,7 +9,7 @@
  */
 
 import { jidNormalizedUser } from 'baileys';
-import { CONTACTS_UPDATE, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE } from './const.js';
+import { CONTACTS_UPDATE, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, PRESENCE_UPDATE } from './const.js';
 
 const skipMessageTypes = [
   'messageContextInfo',
@@ -61,11 +61,19 @@ export function extactTextContext(m) {
 
 export class Ctx {
   constructor({ handler, eventName, event, eventType }) {
-    /** @type {import('./handler.js').Handler} */
-    this.handler = handler;
-    this.getName = (jid) => this.handler?.getName(jid);
-    this.sendMessage = (jid, content, options) => this.handler?.sendMessage(jid, content, options);
-    this.relayMessage = (jid, content, options) => this.handler?.relayMessage(jid, content, options);
+
+    this.getName = (jid) => handler?.getName(jid);
+    this.sendMessage = async (jid, content, options) => handler?.sendMessage(jid, content, options);
+    this.relayMessage = async (jid, content, options) => handler?.relayMessage(jid, content, options);
+    this.reply = async (content, options) => {
+      if (!this.chat) throw new Error('chat jid not provided');
+      return await handler?.sendMessage(this.chat, content, options);
+    }
+    this.replyRelay = async (content, options) => {
+      if (!this.chat) throw new Error('chat jid not provided');
+      return await handler?.relayMessage(this.chat, content, options);
+    }
+
 
     this.eventName = eventName;
     this.event = event;
@@ -88,6 +96,14 @@ export class Ctx {
     if (eventName === CONTACTS_UPDATE) {
       this.sender = event.id;
       this.pushName = event.notify;
+    }
+
+    if (eventName === PRESENCE_UPDATE) {
+      this.chat = event.id;
+      for (const jid of Object.keys(event.presences)) {
+        this.sender = jid;
+        this.presence = event.presences[jid].lastKnownPresence;
+      }
     }
 
     if (event.key) {
@@ -130,7 +146,7 @@ export class Ctx {
       this.pattern = splitted[0];
       this.args = splitted.slice(1)?.join(' ');
 
-      this.isCMD = this.handler?.isCMD(this.pattern);
+      this.isCMD = handler?.isCMD(this.pattern);
     }
 
     this.pushName = event?.pushName ?? this.pushName;
@@ -138,7 +154,7 @@ export class Ctx {
     this.senderName = this.pushName ?? this.getName(this.sender) ?? this.sender;
 
     if (this.sender && this.sender?.endsWith('@lid')) {
-      const jidLID = jidNormalizedUser(this.handler?.client?.sock?.user?.lid);
+      const jidLID = jidNormalizedUser(handler?.client?.sock?.user?.lid);
       const isOwnLID = jidLID === this.sender;
 
       this.fromMe = isOwnLID || this.fromMe;
@@ -148,7 +164,7 @@ export class Ctx {
     this.isStatus = this.chat === 'status@broadcast';
 
     if (this.isGroup) {
-      const data = this.handler?.getGroupMetadata(this.chat);
+      const data = handler?.getGroupMetadata(this.chat);
       if (data) {
         for (const part of data.participants) {
           if (this.sender == part.jid || this.sender == part.lid || this.sender == part.id) {
@@ -158,26 +174,4 @@ export class Ctx {
       }
     }
   }
-
-  /**
-   *
-   * @param {import('baileys').AnyMessageContent} content
-   * @param {import('baileys').MessageGenerationOptions} options
-   */
-  async reply(content, options) {
-    if (!this.chat) throw new Error('chat jid not provided');
-
-    return await this.handler?.sendMessage(this.chat, content, options);
-  }
-
-  /**
-   *
-   * @param {import('baileys').AnyMessageContent} content
-  * @param {import('baileys').MessageGenerationOptions} options
-  */
-  async replyRelay(content, options) {
-    if (!this.chat) throw new Error('chat jid not provided');
-    return await this.handler?.relayMessage(this.chat, content, options);
-  }
-
 }
