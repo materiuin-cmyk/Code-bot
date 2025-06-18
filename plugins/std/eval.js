@@ -27,13 +27,14 @@ export default {
 
   /** @param {import('../../src/context.js').Ctx} c */
   exec: async (c) => {
-    pen.Warn(c.pattern, 'args :', c.args);
     const src = c.args?.trim();
     if (!src) return;
 
     try {
-      const res = eval(src);
-      pen.Info(c.pattern, 'Result:', res);
+      let res = eval(src);
+      if (typeof res === 'object') {
+        res = JSON.stringify(res, null, 2);
+      }
       c.reply({ text: `${res}` });
     } catch (e) {
       c.reply({ text: `${e}` });
