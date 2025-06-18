@@ -14,9 +14,10 @@ import { platform } from 'os';
 import { pathToFileURL } from 'url';
 import { Plugin } from './plugin.js';
 import { Pen } from './pen.js';
-import { CONTACTS_UPDATE, CONTACTS_UPSERT, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, GROUPS_UPSERT, MESSAGES_REACTION, MESSAGES_UPSERT } from './const.js';
+import { CONTACTS_UPDATE, CONTACTS_UPSERT, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, GROUPS_UPSERT, MESSAGES_REACTION, MESSAGES_UPSERT, PRESENCE_UPDATE } from './const.js';
 import { jidNormalizedUser } from 'baileys';
-import { genHEX } from './tools.js';
+import { genHEX, hashCRC32 } from './tools.js';
+import * as chokidar from 'chokidar';
 
 export class Handler {
   constructor({ pluginDir, filter, prefix, pen, groupCache, contactCache, timerCache }) {
@@ -49,18 +50,33 @@ export class Handler {
     /** @type {Map<string, number>} */
     this.timerCache = timerCache ?? new Map();
 
-    this.loadPlugin(this.pluginDir);
+    this.scanPlugin(this.pluginDir);
 
+    /* Watch changes in pluginDir */
+    this.watcher = chokidar.watch(this.pluginDir, {
+      ignoreInitial: true,
+      usePolling: true,
+      interval: 1000,
+    })
+      .on('change', (loc, stat) => {
+        this.pen.Debug(`Plugin changed:`, loc);
+        this.loadFile(loc);
+      })
+      .on('add', (loc, stat) => {
+        this.pen.Debug(`Plugin added:`, loc);
+        this.loadFile(loc);
+      });
   }
 
   /** @param {import('./plugin.js').Plugin} opts */
-  async on(...opts) {
+  async on(hash, ...opts) {
+    let i = 0;
     for (const opt of opts) {
       /* Check if plugin hasn't exec */
       if (!opt.exec) continue;
 
       const plugin = new Plugin(opt);
-      const newid = this.plugins.size;
+      const newid = `${hash}-${i}`;
       this.plugins.set(newid, plugin);
 
       /* Check if plugin has cmd, so it is a command plugin */
@@ -87,12 +103,14 @@ export class Handler {
           this.cmds.set(cmd.toLowerCase(), newid);
         }
       } else {
-        this.listens.set(this.listens.size, newid);
+        this.listens.set(newid, newid);
       }
+
+      i++;
     }
   }
 
-  async loadPlugin(dir) {
+  async scanPlugin(dir) {
     let files = [];
     try {
       files = readdirSync(dir);
@@ -103,31 +121,42 @@ export class Handler {
       let loc = `${dir}/${file}`.replace('//', '/');
 
       try {
-        if (statSync(loc)?.isDirectory()) await this.loadPlugin(loc);
+        if (statSync(loc)?.isDirectory()) await this.scanPlugin(loc);
       } catch (e) {
         this.pen.Error(e.message);
       }
-      if (loc.endsWith('.js')) {
-        try {
-          if (platform === 'win32') {
-            loc = pathToFileURL(loc).href;
-          }
 
-          const loaded = await import(loc);
-          if (loaded.default) {
-            if (Array.isArray(loaded.default)) {
-              this.on(...loaded.default);
-            } else {
-              this.on(loaded.default);
-            }
-          }
+      await this.loadFile(loc);
+    }
+  }
 
-          this.pen.Debug(`Plugin loaded:`, loc)
-        } catch (e) {
-          this.pen.Error(loc, e);
+  /**
+   * Load plugin file from given location
+   * @param {string} loc
+   */
+  async loadFile(loc) {
+    if (loc.endsWith('.js')) {
+      try {
+        if (platform === 'win32') {
+          loc = pathToFileURL(loc).href;
         }
+
+        const loaded = await import(loc);
+        let hashPath = hashCRC32(loc);
+        if (loaded.default) {
+          if (Array.isArray(loaded.default)) {
+            this.on(hashPath, ...loaded.default);
+          } else {
+            this.on(hashPath, loaded.default);
+          }
+        }
+
+        this.pen.Debug(`Plugin loaded:`, loc)
+      } catch (e) {
+        this.pen.Error(loc, e);
       }
     }
+
   }
 
   /** 
@@ -257,44 +286,34 @@ export class Handler {
   async attach(client) {
     this.client = client;
 
-    this.client.sock.ev.on(MESSAGES_UPSERT, (update) => {
-      for (const event of update.messages) {
-        this.handle({ eventName: MESSAGES_UPSERT, event: event, eventType: update.type });
-      }
-    });
+    this.client.sock.ev.process(events => {
+      for (const eventName of Object.keys(events)) {
+        const update = events[eventName];
+        switch (eventName) {
+          case MESSAGES_UPSERT: {
+            for (const event of update?.messages) {
+              this.handle({ eventName: eventName, event: event, eventType: update.type });
+            }
+            break;
+          }
 
-    this.client.sock.ev.on(MESSAGES_REACTION, (update) => {
-      for (const event of update) {
-        this.handle({ eventName: MESSAGES_REACTION, event: event, eventType: update.type });
-      }
-    });
+          case MESSAGES_REACTION:
+          case GROUPS_UPSERT:
+          case CONTACTS_UPDATE:
+          case CONTACTS_UPSERT:
+          case GROUPS_UPDATE: {
+            for (const event of update) {
+              this.handle({ eventName: eventName, event: event, eventType: update.type });
+            }
+            break;
+          }
 
-    this.client.sock.ev.on(GROUPS_UPSERT, (update) => {
-      for (const event of update) {
-        this.handle({ eventName: GROUPS_UPSERT, event: event, eventType: update.type });
-      }
-    });
-
-    this.client.sock.ev.on(GROUPS_UPDATE, (update) => {
-      for (const event of update) {
-        this.handle({ eventName: GROUPS_UPDATE, event: event, eventType: update.type });
-      }
-    });
-
-    this.client.sock.ev.on(GROUP_PARTICIAPANTS_UPDATE, (event) => {
-      this.handle({ eventName: GROUP_PARTICIAPANTS_UPDATE, event: event, eventType: event.type });
-    });
-
-
-    this.client.sock.ev.on(CONTACTS_UPDATE, (update) => {
-      for (const event of update) {
-        this.handle({ eventName: CONTACTS_UPDATE, event: event, eventType: update.type });
-      }
-    });
-
-    this.client.sock.ev.on(CONTACTS_UPSERT, (update) => {
-      for (const event of update) {
-        this.handle({ eventName: CONTACTS_UPSERT, event: event, eventType: update.type });
+          case GROUP_PARTICIAPANTS_UPDATE:
+          case PRESENCE_UPDATE: {
+            this.handle({ eventName: eventName, event: update, eventType: update.type });
+            break;
+          }
+        }
       }
     });
   }
