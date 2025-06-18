@@ -15,6 +15,7 @@ import QRCode from "qrcode";
 import { Pen } from "./pen.js";
 import { DisconnectReason } from "baileys";
 import { CONNECTION_UPDATE, CREDS_UPDATE } from "./const.js";
+import { useSQLite } from "./auth_sqlite.js";
 
 
 /* Initialize readline */
@@ -40,7 +41,7 @@ export async function useStore(sessionStr) {
   if (!sessionStr) return null;
 
   if (sessionStr.includes('mongodb')) {
-    return useMongoStore(sessionStr);
+    return useMongoDB(sessionStr);
   } else if (sessionStr.includes('.sqlite') || sessionStr.includes('.db')) {
     return useSQLite(sessionStr)
   } else {
