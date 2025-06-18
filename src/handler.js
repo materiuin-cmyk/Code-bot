@@ -141,7 +141,7 @@ export class Handler {
           loc = pathToFileURL(loc).href;
         }
 
-        const loaded = await import(loc);
+        const loaded = await import(`${loc}?t=${Date.now()}`);
         let hashPath = hashCRC32(loc);
         if (loaded.default) {
           if (Array.isArray(loaded.default)) {
