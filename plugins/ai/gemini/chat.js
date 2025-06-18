@@ -31,6 +31,16 @@ const contentSupport = [
   'stickerMessage',
 ];
 
+function formatMD(s) {
+  if (!s || typeof s !== 'string') return s;
+  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '_*$1*_');
+  s = s.replace(/\*\*(.+?)\*\*/g, '*$1*');
+  s = s.replace(/\*(.+?)\*/g, '_$1_');
+  s = s.replace(/~~(.+?)~~/g, '~$1~');
+  s = s.replace(/\w+\n(.+?)\n/g, '$1');
+  return s;
+}
+
 
 /**
  * @param {import('../../../src/context.js').Ctx} c
@@ -109,9 +119,9 @@ async function processChat(c) {
       pen.Debug(`Parts ${parts.length}, Query : ${query?.length}`);
 
       const resp = await gemini.send(this.chat, parts);
-      const respText = resp?.response?.text()?.trim();
+      const respText = formatMD(resp?.response?.text()?.trim());
       if (!respText || respText?.length === 0) return;
-      const sent = await c.reply({ text: `${respText}` });
+      const sent = await c.reply({ text: `${respText}` }, { quoted: c.event });
       if (sent) {
         chatWatch.set(sent.key?.id, `${c.sender}_${c.chat}_${c.timestamp}`);
       }
