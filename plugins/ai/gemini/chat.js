@@ -37,7 +37,14 @@ const contentSupport = [
  */
 async function processChat(c) {
   let query = c.isCMD ? c.args : c.text;
-  if (c.quotedText && c.quotedText?.length > 0 && !chatWatch.has(c.stanzaId)) query = c.quotedText;
+  if (c.quotedText && c.quotedText?.length > 0 && !chatWatch.has(c.stanzaId)) {
+    query = query?.trim();
+    if (query?.length > 0) {
+      query = `${query} ${c.quotedText}`;
+    } else {
+      query = c.quotedText;
+    }
+  }
 
   /** @type {import('@google/generative-ai').Part[]} */
   const parts = [];
@@ -46,9 +53,10 @@ async function processChat(c) {
 
   if (query || query.length > 0) parts.push(query);
 
-  const msgs = [c.message, c.quotedText];
+  const msgs = [c.message, c.quotedMessage];
   for (const m of msgs) {
     const ext = extactTextContext(m);
+
     if (!m || !ext) continue;
     if (!contentSupport.includes(ext.type)) continue;
 
@@ -84,7 +92,6 @@ async function processChat(c) {
     }
 
     const mimetype = content?.mimetype || 'unknown';
-    const unique = content ? hashCRC32(content.fileSha256.toString(16)) : c.timestamp;
 
     const buff = await downloadMediaMessage({ message: m }, 'buffer', {});
     if (!buff) continue;
@@ -99,7 +106,7 @@ async function processChat(c) {
 
   if (parts.length > 0) {
     try {
-      pen.Warn(`Parts ${parts.length}, Query : ${query?.length}`);
+      pen.Debug(`Parts ${parts.length}, Query : ${query?.length}`);
 
       const resp = await gemini.send(this.chat, parts);
       const respText = resp?.response?.text()?.trim();
