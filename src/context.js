@@ -62,6 +62,7 @@ export function extactTextContext(m) {
 export class Ctx {
   constructor({ handler, eventName, event, eventType }) {
     this.handler = () => handler;
+    this.sock = () => handler?.client?.sock;
     this.getName = (jid) => handler?.getName(jid);
     this.sendMessage = async (jid, content, options) => handler?.sendMessage(jid, content, options);
     this.relayMessage = async (jid, content, options) => handler?.relayMessage(jid, content, options);
