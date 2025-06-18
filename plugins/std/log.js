@@ -29,6 +29,29 @@ function hasID(c) {
 }
 const detect = new BotDetector({ delay: 2000 });
 
+/** @type {void} */
+const sliceStr = (str, len, mid) => {
+  if (!str || str?.length <= len) return str;
+  if (!mid) mid = '';
+  const half = Math.round(len / 2)
+  const start = str.slice(0, half)
+  const end = str.slice(str.length - half, str.length)
+  return `${start}${mid}${end}`
+}
+
+/** @type {void} */
+const cleanName = (str) => {
+  if (typeof str === 'string') {
+    str = str.replaceAll('\n', ' ');
+    while (str.includes('  ')) {
+      str = str.replaceAll('  ', ' ');
+    }
+    str = str.trim();
+  }
+
+  return str;
+}
+
 /** @type {import('../../src/plugin.js').Plugin} */
 export default {
   desc: 'Logs the message to the console',
@@ -65,14 +88,18 @@ export default {
 
         /* Data section */
         data.push(formatElapse(new Date().getTime() - c.timestamp));
-        data.push(c.id.slice(0, 4) + '..' + c.id.slice(c.id.length - 4, c.id.length));
+        if (c.stanzaId) data.push(sliceStr(c.stanzaId, 8, '-'), '<<');
+        data.push(sliceStr(c.id, 8, '-'));
 
+
+        const chatName = cleanName(c.chatName);
+        const senderName = cleanName(c.senderName);
 
         data.push(
           pen.GreenBr(c.type?.replaceAll('Message', '')),
-          pen.Blue(c.chatName),
+          pen.Blue(chatName),
           '<',
-          pen.Red(c.senderName),
+          pen.Red(senderName),
           c.text?.slice(0, 100).replaceAll('\n', ' ') || ''
         );
 
