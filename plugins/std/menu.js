@@ -8,9 +8,7 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
-import { MESSAGES_UPSERT } from '../../src/const.js';
-import { fromMe, midwareAnd, midwareOr } from '../../src/midware.js';
-import pen from '../../src/pen.js';
+import { fromMe, midwareAnd } from '../../src/midware.js';
 import { formatElapse } from '../../src/tools.js';
 
 /** @type {import('../../src/plugin.js').Plugin} */
