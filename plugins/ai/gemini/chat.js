@@ -137,6 +137,7 @@ export default [
     cmd: ['gm', 'gemini'],
     timeout: 15,
     desc: 'Gemini chat plugin',
+    cat: 'ai',
     midware: midwareAnd(
       eventNameIs(MESSAGES_UPSERT), fromMe,
     ),
