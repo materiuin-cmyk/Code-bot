@@ -115,6 +115,7 @@ export class Ctx {
     }
 
     if (event.message) {
+      this.message = event.message;
       const ext = extactTextContext(event.message);
       this.type = ext.type;
       this.text = ext.text;
