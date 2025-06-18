@@ -58,17 +58,27 @@ export class Handler {
       usePolling: true,
       interval: 1000,
     })
-      .on('change', (loc, stat) => {
+      .on('change', (loc) => {
         this.pen.Debug(`Plugin changed:`, loc);
         this.loadFile(loc);
       })
-      .on('add', (loc, stat) => {
+      .on('add', (loc) => {
         this.pen.Debug(`Plugin added:`, loc);
         this.loadFile(loc);
+      })
+      .on('unlink', (loc) => {
+        this.pen.Debug(`Plugin removed:`, loc);
+        const hash = hashCRC32(loc);
+        this.removeOn(hash);
       });
   }
 
-  /** @param {import('./plugin.js').Plugin} opts */
+  /**
+   * Add plugin to handler
+   *
+   * @param {string} hash
+   * @param {import('./plugin.js').Plugin} opts 
+   */
   async on(hash, ...opts) {
     let i = 0;
     for (const opt of opts) {
@@ -110,6 +120,38 @@ export class Handler {
     }
   }
 
+  /**
+   * Remove plugin by hash
+   *
+   * @param {string} hash
+   */
+  async removeOn(hash) {
+    try {
+      for (const id of this.plugins.keys()) {
+        if (id.startsWith(hash)) {
+          this.plugins.delete(id);
+          for (const [id_ls, val] of this.listens) {
+            if (val === id) {
+              this.listens.delete(id_ls);
+            }
+          }
+          for (const [id_cmd, val] of this.cmds) {
+            if (val.startsWith(hash)) {
+              this.cmds.delete(id_cmd);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      this.pen.Error(e);
+    }
+  }
+
+  /**
+   * Plugin scanner for given directory
+   *
+   * @param {string} dir
+   */
   async scanPlugin(dir) {
     let files = [];
     try {
@@ -132,6 +174,7 @@ export class Handler {
 
   /**
    * Load plugin file from given location
+   *
    * @param {string} loc
    */
   async loadFile(loc) {
