@@ -101,7 +101,7 @@ export class Ctx {
     }
 
     if (eventName === PRESENCE_UPDATE) {
-      this.chat = jidNormalizedUser(event.event.id);
+      this.chat = event.id;
       for (const jid of Object.keys(event.presences)) {
         this.sender = jid;
         this.presence = event.presences[jid].lastKnownPresence;
