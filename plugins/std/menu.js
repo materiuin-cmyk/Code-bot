@@ -30,14 +30,14 @@ export default {
 
     const texts = ['# Menu'];
 
-    const since = new Date() - c.handler?.client?.dateStarted;
+    const since = new Date() - c.handler()?.client?.dateStarted;
     texts.push('', `Uptime: ${formatElapse(since)}`);
 
 
     const prefix = c.pattern[0];
     const categories = new Map();
-    for (const cid of c.handler?.cmds?.values()) {
-      const p = c.handler?.plugins?.get(cid);
+    for (const cid of c.handler()?.cmds?.values()) {
+      const p = c.handler()?.plugins?.get(cid);
       if (!p || p?.hidden || p?.disabled) continue;
       if (!categories.has(p.cat)) categories.set(p.cat, new Map());
 
@@ -59,7 +59,7 @@ export default {
       }
     }
 
-    texts.push('', `${c.handler?.cmds?.size} cmd & ${c.handler?.listens?.size} listener`);
+    texts.push('', `${c.handler()?.cmds?.size} cmd & ${c.handler()?.listens?.size} listener`);
     if (texts.length > 1) {
       c.reply({ text: texts.join('\n') });
     }
