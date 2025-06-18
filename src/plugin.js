@@ -12,7 +12,7 @@
  * Plugin class for handling event as listener or command
  */
 export class Plugin {
-  constructor({ cmd, desc, cat, tags, disabled, hidden, timeout, noPrefix, midware, exec }) {
+  constructor({ cmd, desc, cat, tags, disabled, hidden, timeout, noPrefix, midware, exec, location }) {
     /** @type {import('./handler.js').Handler} */
     this.handler = null;
 
@@ -52,6 +52,9 @@ export class Plugin {
 
     /** @type {(ctx: import('./context.js').Ctx) => Promise<void>} */
     this.exec = exec;
+
+    /** @type {string} */
+    this.location = location;
   }
 
   /**

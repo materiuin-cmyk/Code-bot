@@ -76,16 +76,19 @@ export class Handler {
   /**
    * Add plugin to handler
    *
-   * @param {string} hash
+   * @param {string} location
    * @param {import('./plugin.js').Plugin} opts 
    */
-  async on(hash, ...opts) {
+  async on(location, ...opts) {
     let i = 0;
     for (const opt of opts) {
       /* Check if plugin hasn't exec */
       if (!opt.exec) continue;
 
+      const hash = hashCRC32(location);
       const plugin = new Plugin(opt);
+      plugin.location = location;
+
       const newid = `${hash}-${i}`;
       this.plugins.set(newid, plugin);
 
@@ -185,12 +188,11 @@ export class Handler {
         }
 
         const loaded = await import(`${loc}?t=${Date.now()}`);
-        let hashPath = hashCRC32(loc);
         if (loaded.default) {
           if (Array.isArray(loaded.default)) {
-            this.on(hashPath, ...loaded.default);
+            this.on(loc, ...loaded.default);
           } else {
-            this.on(hashPath, loaded.default);
+            this.on(loc, loaded.default);
           }
         }
 
@@ -247,6 +249,8 @@ export class Handler {
           const listen = this.plugins.get(lsid);
           if (!listen) continue;
 
+          ctx.plugin = () => listen;
+
           /* Check rules and midware before exec */
           const passed = await listen.check(ctx);
           if (!passed) {
@@ -257,6 +261,8 @@ export class Handler {
           if (listen.exec) await listen.exec(ctx);
         } catch (e) {
           this.pen.Error(e);
+        } finally {
+          ctx.plugin = null;
         }
       }
 
@@ -267,6 +273,8 @@ export class Handler {
         const plugin = this.plugins.get(pid);
         if (plugin) {
           try {
+            ctx.plugin = () => plugin;
+
             /* Check rules and midware before exec */
             const passed = await plugin.check(ctx);
             if (!passed) {
@@ -277,6 +285,8 @@ export class Handler {
             if (plugin.exec) await plugin.exec(ctx);
           } catch (e) {
             this.pen.Error(e);
+          } finally {
+            ctx.plugin = null;
           }
         }
       }

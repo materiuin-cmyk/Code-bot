@@ -62,6 +62,7 @@ export function extactTextContext(m) {
 export class Ctx {
   constructor({ handler, eventName, event, eventType }) {
     this.handler = () => handler;
+    this.plugin = null;
     this.sock = () => handler?.client?.sock;
     this.getName = (jid) => handler?.getName(jid);
     this.sendMessage = async (jid, content, options) => handler?.sendMessage(jid, content, options);
@@ -100,7 +101,7 @@ export class Ctx {
     }
 
     if (eventName === PRESENCE_UPDATE) {
-      this.chat = event.id;
+      this.chat = jidNormalizedUser(event.event.id);
       for (const jid of Object.keys(event.presences)) {
         this.sender = jid;
         this.presence = event.presences[jid].lastKnownPresence;
@@ -160,6 +161,7 @@ export class Ctx {
       const isOwnLID = jidLID === this.sender;
 
       this.fromMe = isOwnLID || this.fromMe;
+      // this.senderLID = this.sender;
     }
 
     this.isGroup = this.chat?.endsWith('@g.us');
@@ -171,6 +173,7 @@ export class Ctx {
         for (const part of data.participants) {
           if (this.sender == part.jid || this.sender == part.lid || this.sender == part.id) {
             this.isAdmin = part.admin?.includes('admin');
+            // this.sender = part.jid ?? this.sender;
           }
         }
       }
