@@ -8,7 +8,7 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
-import { CONTACTS_UPDATE, MESSAGES_REACTION, MESSAGES_UPSERT, PRESENCE_UPDATE } from '../../src/const.js';
+import { CONTACTS_UPDATE, GROUP_PARTICIAPANTS_UPDATE, MESSAGES_REACTION, MESSAGES_UPSERT, PRESENCE_UPDATE } from '../../src/const.js';
 import { BotDetector } from '../../src/detector.js';
 import pen from '../../src/pen.js';
 import { formatElapse } from '../../src/tools.js';
@@ -125,6 +125,40 @@ export default {
 
         break;
       }
+
+      case GROUP_PARTICIAPANTS_UPDATE: {
+        data.push('👥');
+
+        switch (c.action) {
+          case 'invite':
+          case 'add': {
+            data.push('⤵️');
+            break;
+          }
+          case 'promote': {
+            data.push('⬆️');
+            break;
+          }
+          case 'demote': {
+            data.push('⬇️');
+            break;
+          }
+          case 'leave': {
+            data.push('⤴️');
+            break;
+          }
+          default:
+            data.push(c.action);
+        }
+        data.push('',
+          pen.Blue(chatName), '<',
+          pen.Red(senderName),
+          c.mentionedJid?.map(jid => pen.Green(jid)).join(', ')
+        );
+
+        break;
+      }
+
       default:
         data.push(c.eventName);
     }
