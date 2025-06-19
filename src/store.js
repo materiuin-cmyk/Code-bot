@@ -20,12 +20,15 @@ export class StoreJson {
 
     this.autoSave = autoSave ?? false;
     this.saveName = saveName;
+    this.expiration = expiration ?? 0;
 
     /* Read json data from local storage */
     try {
       this.data = JSON.parse(fs.readFileSync(saveName, 'utf8'));
     } catch (e) {
-      pen.Error(e);
+      pen.Error(e.message);
+    } finally {
+      this.data = {};
     }
   }
 
