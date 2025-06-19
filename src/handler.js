@@ -18,6 +18,7 @@ import { CONTACTS_UPDATE, CONTACTS_UPSERT, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UP
 import { jidNormalizedUser } from 'baileys';
 import { genHEX, hashCRC32 } from './tools.js';
 import * as chokidar from 'chokidar';
+import { WA_DEFAULT_EPHEMERAL } from 'baileys';
 
 export class Handler {
   constructor({ pluginDir, filter, prefix, pen, groupCache, contactCache, timerCache }) {
@@ -352,6 +353,11 @@ export class Handler {
           }
           break;
         }
+
+        case WA_DEFAULT_EPHEMERAL: {
+          this.pen.Debug(WA_DEFAULT_EPHEMERAL, ctx.event);
+          break;
+        }
       }
     } catch (e) {
       this.pen.Error(e);
@@ -425,10 +431,14 @@ export class Handler {
   }
 
   updateTimer(jid, ephemeral) {
-    if (ephemeral) {
+    if (jid) {
       const data = this.timerCache.get(jid);
       if (data !== ephemeral) {
-        this.timerCache.set(jid, ephemeral);
+        if (!ephemeral) {
+          this.timerCache.delete(jid)
+        } else {
+          this.timerCache.set(jid, ephemeral);
+        }
       }
     }
   }
