@@ -77,6 +77,8 @@ export default {
             data.push('🎤')
             break;
           }
+          default:
+            data.push(c.presence);
         }
 
         data.push(
