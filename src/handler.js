@@ -202,6 +202,18 @@ export class Handler {
     }
   }
 
+  async preLoad(...callbacks) {
+    if (!callbacks) return;
+
+    for (const callback of callbacks) {
+      try {
+        await callback(this);
+      } catch (e) {
+        this.pen.Error(e);
+      }
+    }
+  }
+
   /**
    * Load plugin file from given location
    *
@@ -215,6 +227,14 @@ export class Handler {
         }
 
         const loaded = await import(`${loc}?t=${Date.now()}`);
+        if (loaded.pre) {
+          if (Array.isArray(loaded.pre)) {
+            this.preLoad(...loaded.pre);
+          } else {
+            this.preLoad(loaded.pre);
+          }
+        }
+
         if (loaded.default) {
           if (Array.isArray(loaded.default)) {
             this.on(loc, ...loaded.default);
