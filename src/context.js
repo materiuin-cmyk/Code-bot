@@ -60,6 +60,9 @@ export function extactTextContext(m) {
 }
 
 export class Ctx {
+  /**
+   * @param {{handler: import('./handler.js').Handler }} - Handler instance
+   */
   constructor({ handler, eventName, event, eventType }) {
     this.handler = () => handler;
     this.plugin = null;
@@ -70,11 +73,12 @@ export class Ctx {
     this.reply = async (content, options) => {
       if (!this.chat) throw new Error('chat jid not provided');
       return await handler?.sendMessage(this.chat, content, options);
-    }
+    };
     this.replyRelay = async (content, options) => {
       if (!this.chat) throw new Error('chat jid not provided');
       return await handler?.relayMessage(this.chat, content, options);
-    }
+    };
+    this.react = async (emoji, key) => await handler.sendMessage(this.chat, { react: { text: emoji, key: key, } });
 
 
     this.eventName = eventName;
@@ -109,6 +113,7 @@ export class Ctx {
     }
 
     if (event.key) {
+      this.key = event.key;
       this.id = event.key.id;
       this.fromMe = event.key.fromMe;
       this.chat = event.key.remoteJid;
