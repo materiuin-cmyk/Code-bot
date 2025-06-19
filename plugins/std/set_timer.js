@@ -26,9 +26,11 @@ export default {
 
   /** @param {import('../../src/context.js').Ctx} c */
   exec: async (c) => {
-    const latest = c.handler().getTimer(c.chat);
-    pen.Debug(`Setting timer for ${c.chat} from ${latest} to ${c.expiration}`);
+    const latest = c.handler()?.getTimer(c.chat);
+    const text = `Setting timer for ${c.chat} from ${latest} to ${c.expiration}`;
+    pen.Debug(text);
     c.handler()?.updateTimer(c.chat, c.expiration);
+    c.reply({ text: text });
   }
 };
 
