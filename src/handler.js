@@ -367,6 +367,7 @@ export class Handler {
           });
           break;
         }
+
         case MESSAGES_UPSERT: {
           if (ctx?.expiration) {
             this.updateTimer(ctx.chat, ctx.expiration);
@@ -418,6 +419,11 @@ export class Handler {
             this.handle({ eventName: eventName, event: update, eventType: update.type });
             break;
           }
+
+          case WA_DEFAULT_EPHEMERAL: {
+            this.pen.Debug(WA_DEFAULT_EPHEMERAL, update);
+            break;
+          }
         }
       }
     });
@@ -426,7 +432,10 @@ export class Handler {
   async updateGroupMetadata(jid) {
     try {
       const data = await this.client.sock.groupMetadata(jid);
-      if (data) this.groupCache.set(jid, data);
+      if (data) {
+        this.groupCache.set(jid, data);
+        this.updateTimer(data.id, data.ephemeralDuration);
+      }
     } catch (e) {
       this.pen.Error(e);
     }
