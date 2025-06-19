@@ -74,6 +74,52 @@ export class Handler {
   }
 
   /**
+   * Set prefix for command plugins
+   *
+   * @param {string} prefix
+   */
+  setPrefix(prefix) {
+    this.prefix = prefix;
+    this.cmds.clear()
+    for (const [id, plugin] of this.plugins) {
+      if (!plugin.cmd) continue;
+      this.genCMD(id, plugin);
+    }
+  }
+
+  /**
+   * Generate command for given plugin
+   *
+   * @param {import('./plugin.js').Plugin} plugin
+   */
+  genCMD(id, plugin) {
+    if (plugin?.cmd) {
+      let precmds = [];
+      if (Array.isArray(plugin.cmd)) {
+        precmds = plugin.cmd;
+      } else {
+        precmds = [plugin.cmd];
+      }
+
+      let cmds = [];
+      for (const precmd of precmds) {
+        if (plugin.noPrefix) {
+          cmds.push(precmd);
+        } else {
+          for (const pre of this.prefix) {
+            cmds.push(`${pre}${precmd}`);
+          }
+        }
+      }
+
+      for (const cmd of cmds) {
+        this.cmds.set(cmd.toLowerCase(), id);
+      }
+
+    }
+  }
+
+  /**
    * Add plugin to handler
    *
    * @param {string} location
@@ -94,27 +140,7 @@ export class Handler {
 
       /* Check if plugin has cmd, so it is a command plugin */
       if (plugin.cmd) {
-        let precmds = [];
-        if (Array.isArray(plugin.cmd)) {
-          precmds = plugin.cmd;
-        } else {
-          precmds = [plugin.cmd];
-        }
-
-        let cmds = [];
-        for (const precmd of precmds) {
-          if (plugin.noPrefix) {
-            cmds.push(precmd);
-          } else {
-            for (const pre of this.prefix) {
-              cmds.push(`${pre}${precmd}`);
-            }
-          }
-        }
-
-        for (const cmd of cmds) {
-          this.cmds.set(cmd.toLowerCase(), newid);
-        }
+        this.genCMD(newid, plugin);
       } else {
         this.listens.set(newid, newid);
       }
