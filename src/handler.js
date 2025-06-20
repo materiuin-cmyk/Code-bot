@@ -228,6 +228,12 @@ export class Handler {
   async loadFile(loc) {
     if (loc.endsWith('.js')) {
       try {
+        const filename = loc.split('/').pop();
+        if (filename.startsWith('_') || filename.startsWith('.')) {
+          this.pen.Debug('Skip:', loc)
+          return;
+        }
+
         if (platform === 'win32') {
           loc = pathToFileURL(loc).href;
         }
