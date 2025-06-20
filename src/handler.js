@@ -51,6 +51,7 @@ export class Handler {
     /** @type {Map<string, number>} */
     this.timerCache = timerCache ?? new Map();
 
+    /* Scan plugins on start */
     this.scanPlugin(this.pluginDir);
 
     /* Watch changes in pluginDir */
@@ -89,8 +90,9 @@ export class Handler {
   }
 
   /**
-   * Generate command for given plugin
+   * Generate & registering command for given plugin
    *
+   * @param {string} id
    * @param {import('./plugin.js').Plugin} plugin
    */
   genCMD(id, plugin) {
@@ -116,7 +118,6 @@ export class Handler {
       for (const cmd of cmds) {
         this.cmds.set(cmd.toLowerCase(), id);
       }
-
     }
   }
 
@@ -202,6 +203,11 @@ export class Handler {
     }
   }
 
+  /**
+   * Preload plugins before start
+   *
+   * @param {...Function} callbacks
+   */
   async preLoad(...callbacks) {
     if (!callbacks) return;
 
@@ -252,15 +258,14 @@ export class Handler {
   }
 
   /** 
-   *
    * Get command by pattern
    *
    * @param {string} p
+   * @returns {import('./plugin.js').Plugin|undefined}
    */
   getCMD(p) {
     if (!p) return;
-    p = p.toLowerCase();
-    const cid = this.cmds.get(p);
+    const cid = this.cmds.get(p.toLowerCase());
     if (!cid) return;
     return this.plugins.get(cid);
   }
@@ -269,10 +274,11 @@ export class Handler {
    * Check if given pattern is a command
    *
    * @param {string} p
+   * @returns {boolean}
    */
   isCMD(p) {
-    p = p.toLowerCase();
-    return this.cmds.has(p);
+    if (!p) return false;
+    return this.cmds.has(p.toUpperCase());
   }
 
   /**
@@ -354,7 +360,7 @@ export class Handler {
         case GROUPS_UPSERT:
         case GROUP_PARTICIAPANTS_UPDATE:
         case GROUPS_UPDATE: {
-          this.pen.Warn(ctx.eventName, ctx.eventName);
+          this.pen.Debug(ctx.eventName, ctx.chatName);
           await this.updateGroupMetadata(ctx.chat);
           break;
         }
@@ -369,7 +375,7 @@ export class Handler {
         }
 
         case MESSAGES_UPSERT: {
-          if (ctx?.expiration) {
+          if (ctx?.fromMe && ctx?.eventType !== 'append' && ctx?.type !== 'senderKeyDistributionMessage') {
             this.updateTimer(ctx.chat, ctx.expiration);
           }
           break;
@@ -386,6 +392,7 @@ export class Handler {
   }
 
   /** 
+  * Attach client to handler & start listening for events
   *
   * @param {import('./client.js').Wangsaf} client 
   */
@@ -429,6 +436,11 @@ export class Handler {
     });
   }
 
+  /**
+   * Update group metadata by given jid
+   *
+   * @param {string} jid
+   */
   async updateGroupMetadata(jid) {
     try {
       const data = await this.client.sock.groupMetadata(jid);
@@ -441,12 +453,24 @@ export class Handler {
     }
   }
 
+  /**
+   * Get group metadata by given jid
+   *
+   * @param {string} jid
+   * @returns {import('baileys').GroupMetadata|undefined}
+   */
   getGroupMetadata(jid) {
     const data = this.groupCache.get(jid);
     if (!data) this.updateGroupMetadata(jid).catch((e) => this.pen.Error(e));
     return data;
   }
 
+  /**
+   * Update contact by given jid & data
+   *
+   * @param {string} jid
+   * @param {import('baileys').Contact} data
+   */
   updateContact(jid, data) {
     try {
       if (data) this.contactCache.set(jid, data);
@@ -455,11 +479,24 @@ export class Handler {
     }
   }
 
+  /**
+   * Get contact by given jid
+   *
+   * @param {string} jid
+   * @returns {import('baileys').Contact|undefined}
+   */
   getContact(jid) {
     return this.contactCache.get(jid);
   }
 
+  /**
+   * Update timer by given jid & ephemeral
+   * 
+   * @param {string} jid
+   * @param {number} ephemeral
+   */
   updateTimer(jid, ephemeral) {
+    this.pen.Debug(jid, ephemeral);
     if (jid) {
       const data = this.timerCache.get(jid);
       if (data !== ephemeral) {
@@ -472,10 +509,22 @@ export class Handler {
     }
   }
 
+  /**
+   * Get timer by given jid
+   * 
+   * @param {string} jid
+   * @returns {number|undefined}
+   */
   getTimer(jid) {
     return this.timerCache.get(jid);
   }
 
+  /**
+   * Get name by given jid
+   * 
+   * @param {string} jid
+   * @returns {string|undefined}
+   */
   getName(jid) {
     jid = jidNormalizedUser(jid);
     if (!jid || jid === '') return null;
