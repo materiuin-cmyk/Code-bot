@@ -16,7 +16,6 @@ import { exec } from 'child_process';
 /** @type {import('../../src/plugin.js').Plugin} */
 export default {
   cmd: ['$'],
-  noPrefix: true,
   timeout: 15,
   cat: 'system',
   tags: ['system'],
