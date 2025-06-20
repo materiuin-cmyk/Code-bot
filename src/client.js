@@ -121,11 +121,11 @@ export class Wangsaf {
           phone = phone?.replace(/[^+0-9]/g, '');
           phone = phone?.trim()
 
-          if (!phone || phone == '') console.log('Invalid phone number')
+          if (!phone || phone == '') this.pen.Error('Invalid phone number')
         }
       }
 
-      this.pen.Debug(`Using this phone : ${phone}`);
+      this.pen.Info(`Using this phone : ${phone}`);
 
 
       let code = await this.sock.requestPairingCode(phone);
@@ -139,8 +139,6 @@ export class Wangsaf {
       }
 
       if (connection === 'close') {
-        this.pen.Debug(CONNECTION_UPDATE, connection, lastDisconnect.error);
-
         const statusCode = lastDisconnect?.error?.output?.statusCode;
         const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
         if (shouldReconnect) {
@@ -159,7 +157,7 @@ export class Wangsaf {
           }
         }
       } else if (connection === 'open') {
-        this.pen.Debug(CONNECTION_UPDATE, connection, lastDisconnect);
+        this.pen.Debug(CONNECTION_UPDATE, 'Client connected');
       }
     });
 
