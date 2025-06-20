@@ -367,7 +367,7 @@ export class Handler {
         case GROUP_PARTICIAPANTS_UPDATE:
         case GROUPS_UPDATE: {
           this.pen.Debug(ctx.eventName, 'Updating group metadata', ctx.chatName, `(${ctx.chat})`);
-          await this.updateGroupMetadata(ctx.chat);
+          await this.updateGroupMetadata(ctx.chat, ctx.eventName);
           break;
         }
 
@@ -446,13 +446,14 @@ export class Handler {
    * Update group metadata by given jid
    *
    * @param {string} jid
+   * @param {string} via
    */
-  async updateGroupMetadata(jid) {
+  async updateGroupMetadata(jid, via) {
     try {
       const data = await this.client.sock.groupMetadata(jid);
       if (data) {
         this.groupCache.set(jid, data);
-        this.updateTimer(data.id, data.ephemeralDuration, 'groupMetadata');
+        this.updateTimer(data.id, data.ephemeralDuration, via);
       }
     } catch (e) {
       this.pen.Error(e);
