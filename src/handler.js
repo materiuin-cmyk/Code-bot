@@ -360,7 +360,7 @@ export class Handler {
         case GROUPS_UPSERT:
         case GROUP_PARTICIAPANTS_UPDATE:
         case GROUPS_UPDATE: {
-          this.pen.Debug(ctx.eventName, ctx.chatName);
+          this.pen.Debug(ctx.eventName, 'Updating group metadata', ctx.chatName, `(${ctx.chat})`);
           await this.updateGroupMetadata(ctx.chat);
           break;
         }
@@ -376,7 +376,7 @@ export class Handler {
 
         case MESSAGES_UPSERT: {
           if (ctx?.fromMe && ctx?.eventType !== 'append' && ctx?.type !== 'senderKeyDistributionMessage') {
-            this.updateTimer(ctx.chat, ctx.expiration);
+            this.updateTimer(ctx.chat, ctx.expiration, ctx.eventName);
           }
           break;
         }
@@ -446,7 +446,7 @@ export class Handler {
       const data = await this.client.sock.groupMetadata(jid);
       if (data) {
         this.groupCache.set(jid, data);
-        this.updateTimer(data.id, data.ephemeralDuration);
+        this.updateTimer(data.id, data.ephemeralDuration, 'groupMetadata');
       }
     } catch (e) {
       this.pen.Error(e);
@@ -494,9 +494,10 @@ export class Handler {
    * 
    * @param {string} jid
    * @param {number} ephemeral
+   * @param {string} via
    */
-  updateTimer(jid, ephemeral) {
-    this.pen.Debug(jid, ephemeral);
+  updateTimer(jid, ephemeral, via) {
+    this.pen.Debug('Updating ephemeral for', jid, 'to', ephemeral, via ? `via ${via}` : '');
     if (jid) {
       const data = this.timerCache.get(jid);
       if (data !== ephemeral) {
