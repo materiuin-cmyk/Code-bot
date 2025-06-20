@@ -30,7 +30,7 @@ const wea = new Wangsaf({
   session: process.env.SESSION ?? 'sesi',
   browser: Browsers.macOS(process.env.BROWSER ?? 'Safari'),
   handler: new Handler({
-    pluginDir: process.cwd() + '/plugins',
+    pluginDir: process.env.PLUGIN_DIR ?? process.cwd() + '/plugins',
     groupCache: new StoreJson({ saveName: getFile('group_metadata.json'), autoSave: true }),
     contactCache: new StoreJson({ saveName: getFile('contacts.json'), autoSave: true }),
     timerCache: new StoreJson({ saveName: getFile('timer.json'), autoSave: true }),
