@@ -26,7 +26,7 @@ export default {
   /** @param {import('../../src/context.js').Ctx} c */
   exec: async (c) => {
 
-    const texts = ['# Menu'];
+    const texts = ['*# Available menu*'];
 
     const since = new Date() - c.handler()?.client?.dateStarted;
     texts.push('', `Uptime: ${formatElapse(since)}`);
@@ -34,6 +34,7 @@ export default {
 
     const prefix = c.pattern[0];
     const categories = new Map();
+    let cmdCount = 0;
     for (const cid of c.handler()?.cmds?.values()) {
       const p = c.handler()?.plugins?.get(cid);
       if (!p || p?.hidden || p?.disabled) continue;
@@ -45,6 +46,7 @@ export default {
       const patt = Array.isArray(p.cmd) ? p.cmd[0] : p.cmd;
 
       cat.set(cid, `${p.noPrefix ? patt : prefix + patt}`);
+      cmdCount++;
     }
 
     let lascat = '';
@@ -57,7 +59,7 @@ export default {
       }
     }
 
-    texts.push('', `${c.handler()?.cmds?.size} cmd & ${c.handler()?.listens?.size} listener`);
+    texts.push('', `${cmdCount} cmd & ${c.handler()?.listens?.size} listener`);
     if (texts.length > 1) {
       c.reply({ text: texts.join('\n') });
     }
