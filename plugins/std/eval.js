@@ -13,7 +13,7 @@ import { eventNameIs, fromMe, midwareAnd } from '../../src/midware.js';
 
 /** @type {import('../../src/plugin.js').Plugin} */
 export default {
-  cmd: ['>>', '=>'],
+  cmd: ['>'],
   timeout: 15,
   cat: 'system',
   tags: ['system'],
