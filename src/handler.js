@@ -326,7 +326,11 @@ export class Handler {
       }
 
       /* Handle commands */
-      if (ctx?.pattern && ctx?.eventType !== 'append' && ctx?.type !== 'senderKeyDistributionMessage') {
+      const isAppend = ctx?.eventType === 'append';
+      const isPrekey = ctx?.type === 'senderKeyDistributionMessage';
+      const isUndefined = ctx?.type === 'undefined';
+
+      if (ctx?.pattern && !(isAppend || isPrekey || isUndefined)) {
         const pid = this.cmds.get(ctx.pattern.toLowerCase());
         if (!pid) return;
         const plugin = this.plugins.get(pid);
