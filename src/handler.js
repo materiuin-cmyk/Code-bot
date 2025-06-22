@@ -51,6 +51,9 @@ export class Handler {
     /** @type {Map<string, number>} */
     this.timerCache = timerCache ?? new Map();
 
+    /** @type {Array} */
+    this.watchID = [];
+
     /* Scan plugins on start */
     this.scanPlugin(this.pluginDir);
 
@@ -284,7 +287,38 @@ export class Handler {
    */
   isCMD(p) {
     if (!p) return false;
-    return this.cmds.has(p.toUpperCase());
+    return this.cmds.has(p.toLowerCase());
+  }
+
+  /**
+   * Check if given context id is already exist in watchID
+   * 
+   * @param {import('./context.js').Ctx} ctx
+   * @returns {boolean|undefined}
+   */
+  idExist(ctx) {
+    if (this.watchID.includes(ctx?.id)) {
+      return true;
+    } else {
+      if (this.watchID.length >= 100) this.watchID.shift();
+      this.watchID.push(ctx.id);
+      return false;
+    }
+  }
+
+  /**
+   * Check if given context is safe to execute
+   *
+   * @param {import('./context.js').Ctx} ctx
+   * @returns {boolean|undefined}
+   */
+  isSafe(ctx) {
+    const isAppend = ctx?.eventType === 'append';
+    const isPrekey = ctx?.type === 'senderKeyDistributionMessage';
+    const isUndefined = ctx?.type === 'undefined' || typeof ctx?.type === 'undefined';
+    // const idExist = isPrekey || isUndefined ? false : this.idExist(ctx);
+
+    return !(isAppend || isPrekey || isUndefined);
   }
 
   /**
@@ -326,11 +360,8 @@ export class Handler {
       }
 
       /* Handle commands */
-      const isAppend = ctx?.eventType === 'append';
-      const isPrekey = ctx?.type === 'senderKeyDistributionMessage';
-      const isUndefined = ctx?.type === 'undefined';
 
-      if (ctx?.pattern && !(isAppend || isPrekey || isUndefined)) {
+      if (ctx?.pattern && this.isSafe(ctx)) {
         const pid = this.cmds.get(ctx.pattern.toLowerCase());
         if (!pid) return;
         const plugin = this.plugins.get(pid);
