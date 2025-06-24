@@ -10,13 +10,27 @@
 
 import { midwareAnd, midwareOr } from './midware.js';
 
+const onlyOfficial = [
+  'buttonMesage',
+  'botInvoke',
+]
+
 const detect = midwareOr(
   midwareAnd(
     (ctx) => {
       /* Check if id contains non hex char */
       return /[^0-9a-fA-F]+/.test(ctx.id);
     }
-  )
+  ),
+  (ctx) => {
+    if (!ctx.id) return false;
+    /* Check if id contains lowercase */
+    return ctx.id.toUpperCase() !== ctx.id;
+  },
+  (ctx) => {
+    /* Check if message type is in onlyOfficial list */
+    return onlyOfficial.includes(ctx.type);
+  }
 );
 
 export class BotDetector {
@@ -31,3 +45,5 @@ export class BotDetector {
     return detect(ctx);
   }
 }
+
+export default new BotDetector({});
