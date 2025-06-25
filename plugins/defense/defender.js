@@ -23,12 +23,6 @@ const allowed = [
 
 let blockedUsers = [];
 
-/** @param {import('../../src/handler.js').Handler} hand */
-export const attach = async (hand) => {
-  blockedUsers = await hand.client.sock.fetchBlocklist();
-  pen.Debug('Updatting blocklist : ', blockedUsers);
-};
-
 /** @type {import('../../src/plugin.js').Plugin} */
 export default {
   desc: 'Defense system',
@@ -47,7 +41,10 @@ export default {
   exec: async (c) => {
     pen.Warn('LogWatch', c.eventName, c.event);
     try {
-      c.handler().client.sock.updateBlockStatus(c.sender, 'block');
+      if (!blockedUsers.includes(c.sender)) {
+        c.handler().client.sock.updateBlockStatus(c.sender, 'block');
+        blockedUsers.push(c.sender);
+      }
       if (c.isGroup && c.mentionedJid?.length > 1024) {
         c.reply({ delete: c.key });
       }
