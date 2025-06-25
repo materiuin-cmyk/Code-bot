@@ -242,23 +242,35 @@ export class Handler {
         }
 
         const loaded = await import(`${loc}?t=${Date.now()}`);
+        let pre = 0;
+        let def = 0;
+
         if (loaded.pre) {
           if (Array.isArray(loaded.pre)) {
             this.preLoad(...loaded.pre);
+            pre = loaded.pre.length;
           } else {
             this.preLoad(loaded.pre);
+            pre = 1;
           }
         }
 
         if (loaded.default) {
           if (Array.isArray(loaded.default)) {
             this.on(loc, ...loaded.default);
+            def = loaded.default.length;
           } else {
             this.on(loc, loaded.default);
+            def = 1;
           }
         }
 
-        this.pen.Debug(`Plugin loaded:`, loc)
+        const msgs = ['Loaded'];
+        if (pre > 0) msgs.push(`${pre} pre`);
+        if (def > 0) msgs.push(`${def} default`);
+        msgs.push(loc);
+
+        this.pen.Debug(...msgs);
       } catch (e) {
         this.pen.Error(loc, e);
       }
@@ -316,9 +328,9 @@ export class Handler {
     const isAppend = ctx?.eventType === 'append';
     const isPrekey = ctx?.type === 'senderKeyDistributionMessage';
     const isUndefined = ctx?.type === 'undefined' || typeof ctx?.type === 'undefined';
-    // const idExist = isPrekey || isUndefined ? false : this.idExist(ctx);
+    const idExist = isPrekey || isUndefined ? false : this.idExist(ctx);
 
-    return !(isAppend || isPrekey || isUndefined);
+    return !(isAppend || isPrekey || isUndefined || idExist);
   }
 
   /**
@@ -437,6 +449,8 @@ export class Handler {
   * @param {import('./client.js').Wangsaf} client 
   */
   async attach(client) {
+    this.pen.Debug('Attaching client');
+
     this.client = client;
 
     this.client.sock.ev.process(events => {
