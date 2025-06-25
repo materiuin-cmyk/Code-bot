@@ -16,6 +16,7 @@ import { Pen } from "./pen.js";
 import { DisconnectReason } from "baileys";
 import { CONNECTION_UPDATE, CREDS_UPDATE } from "./const.js";
 import { useSQLite } from "./auth_sqlite.js";
+import { unlinkSync } from "node:fs";
 
 
 /* Initialize readline */
@@ -36,16 +37,20 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 /**
  *
  * @param {string} sessionStr 
+ * @returns {{ state:import('baileys').AuthenticationState, saveCreds: Promise<void>, type: 'folder' | 'sqlite' | 'mongodb' } }
  */
 export async function useStore(sessionStr) {
   if (!sessionStr) return null;
 
   if (sessionStr.includes('mongodb')) {
-    return useMongoDB(sessionStr);
+    const { state, saveCreds } = await userMongoDB(sessionStr);
+    return { state, saveCreds, type: 'mongodb' };
   } else if (sessionStr.includes('.sqlite') || sessionStr.includes('.db')) {
-    return useSQLite(sessionStr)
+    const { state, saveCreds } = await useSQLite(sessionStr);
+    return { state, saveCreds, type: 'sqlite' };
   } else {
-    return await useMultiFileAuthState(sessionStr)
+    const { state, saveCreds } = await useMultiFileAuthState(sessionStr);
+    return { state, saveCreds, type: 'folder' };
   }
 }
 
@@ -84,8 +89,8 @@ export class Wangsaf {
     if (!this.session) throw new Error('session is required');
     this.dateStarted = new Date();
 
-    /** @type {import('baileys').AuthenticationState, Promise<void> } */
-    const { state, saveCreds } = await useStore(this.session)
+    /** @type {{ state:import('baileys').AuthenticationState, saveCreds: Promise<void>, type: 'folder' | 'sqlite' | 'mongodb' } } */
+    const { state, saveCreds, type } = await useStore(this.session)
 
     /** @type {import('baileys').UserFacingSocketConfig} */
     const socketOptions = {
@@ -151,7 +156,21 @@ export class Wangsaf {
         } else if (statusCode === DisconnectReason.loggedOut) {
           this.pen.Debug(CONNECTION_UPDATE, 'Logged out, closing connection');
           try {
-            /* Destroy session directory */
+            switch (type) {
+              case "folder": {
+                /* Destroy session directory */
+                unlinkSync(this.session);
+                break;
+              }
+              case "sqlite": {
+                unlinkSync(this.session);
+                break;
+              }
+              case "mongodb": {
+                /* Not implemented yet */
+              }
+            }
+
           } catch (e) {
             this.pen.Error(e);
           }
