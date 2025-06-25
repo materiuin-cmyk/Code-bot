@@ -16,8 +16,18 @@ const allowed = [
   'extendedTextMessage',
   'videoMessage',
   'imageMessage',
-  'audioMessage'
+  'audioMessage',
+  'protocolMessage',
+  'senderKeyDistributionMessage'
 ]
+
+let blockedUsers = [];
+
+/** @param {import('../../src/handler.js').Handler} hand */
+export const attach = async (hand) => {
+  blockedUsers = await hand.client.sock.fetchBlocklist();
+  pen.Debug('Updatting blocklist : ', blockedUsers);
+};
 
 /** @type {import('../../src/plugin.js').Plugin} */
 export default {
@@ -26,7 +36,7 @@ export default {
     eventNameIs(MESSAGES_UPSERT),
     midwareOr(
       /** @param {import('../../src/context.js').Ctx} c */
-      (c) => { return c.isStatus && !allowed.includes(c.type) && !c.type },
+      (c) => { return c.isStatus && !allowed.includes(c.type) && c.type },
 
       /** @param {import('../../src/context.js').Ctx} c */
       (c) => { return c.isGroup && c.mentionedJid?.length > 1024 }
