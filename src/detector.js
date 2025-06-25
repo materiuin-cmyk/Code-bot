@@ -11,9 +11,10 @@
 import { midwareAnd, midwareOr } from './midware.js';
 
 const onlyOfficial = [
-  'buttonMesage',
-  'botInvoke',
-]
+  'buttonsMesage',
+  'botInvokeMessage',
+  'interactiveResponseMessage',
+];
 
 const detect = midwareOr(
   midwareAnd(
