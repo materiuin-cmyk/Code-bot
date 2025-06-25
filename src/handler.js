@@ -645,11 +645,12 @@ export class Handler {
     if (ephemeral && ephemeral > 0) {
       for (let key in content) {
         if (!content[key]) continue;
-
-        if (!content[key]?.contextInfo) {
-          content[key].contextInfo = { expiration: ephemeral };
-        } else {
-          content[key].contextInfo.expiration = ephemeral;
+        if (typeof content[key] === 'object') {
+          if (!content[key]?.contextInfo) {
+            content[key].contextInfo = { expiration: ephemeral };
+          } else {
+            content[key].contextInfo.expiration = ephemeral;
+          }
         }
       }
     }
