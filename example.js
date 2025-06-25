@@ -15,6 +15,8 @@ import { Handler } from "./src/handler.js";
 import { StoreJson } from "./src/store.js";
 import { getFile } from "./src/data.js";
 import { Browsers } from "baileys";
+import pino from "pino";
+import path from "path";
 
 /* Load environment variables from .env file */
 try {
@@ -30,11 +32,14 @@ const wea = new Wangsaf({
   session: process.env.SESSION ?? 'sesi',
   browser: Browsers.macOS(process.env.BROWSER ?? 'Safari'),
   handler: new Handler({
-    pluginDir: process.env.PLUGIN_DIR ?? process.cwd() + '/plugins',
+    pluginDir: process.env.PLUGIN_DIR ?? path.resolve(process.cwd() + '/plugins'),
     groupCache: new StoreJson({ saveName: getFile('group_metadata.json'), autoSave: true }),
     contactCache: new StoreJson({ saveName: getFile('contacts.json'), autoSave: true }),
     timerCache: new StoreJson({ saveName: getFile('timer.json'), autoSave: true }),
   }),
+  socketOptions: {
+    logger: pino({ level: 'silent' })
+  },
   retry: true
 });
 
