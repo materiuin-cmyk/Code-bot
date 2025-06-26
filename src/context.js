@@ -213,7 +213,7 @@ export class Ctx {
 
     if (eventName === CALL) {
       this.chat = event.groupJid ?? event.chatId;
-      this.sender = event.from;
+      this.sender = jidNormalizedUser(event.from);
       this.id = event.id;
       this.timestamp = event.date * 1000;
       this.isGroup = event.isGroup;
@@ -252,6 +252,8 @@ export class Ctx {
 
       this.fromMe = isOwnLID || this.fromMe;
       // this.senderLID = this.sender;
+    } else {
+      this.fromMe = this.sender === jidNormalizedUser(handler?.client?.sock?.user?.id) || this.fromMe;
     }
 
     /** @type {boolean} */
