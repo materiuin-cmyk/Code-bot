@@ -252,16 +252,13 @@ export class Ctx {
     /** @type {string} */
     this.senderName = this.pushName ?? this.getName(this.sender) ?? this.sender;
 
-    if (this.sender && this.sender?.endsWith('@lid')) {
-      const jidLID = jidNormalizedUser(handler?.client?.sock?.user?.lid);
-      const isOwnLID = jidLID === this.sender;
-
-      this.fromMe = isOwnLID || this.fromMe;
-      // this.senderLID = this.sender;
-    }
-
     if (this.sender?.includes(':')) this.sender = jidNormalizedUser(this.sender);
-    this.fromMe = this.me ? this.sender === this.me : this.fromMe;
+
+    if (this.sender && this.sender?.endsWith('@lid')) {
+      this.fromMe = this.sender === this.meLID || this.fromMe;
+    } else {
+      this.fromMe = this.me ? this.sender === this.me : this.fromMe;
+    }
 
     /** @type {boolean} */
     this.isGroup = this.chat?.endsWith('@g.us');
