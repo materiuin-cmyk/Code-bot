@@ -116,6 +116,12 @@ export class Ctx {
     /** @type {number} */
     this.timestamp = event.messageTimestamp ? event.messageTimestamp * 1000 : new Date().getTime();
 
+    /** @type {string} */
+    this.me = jidNormalizedUser(handler?.client?.sock?.user?.id);
+
+    /** @type {string} */
+    this.meLID = jidNormalizedUser(handler?.client?.sock?.user?.lid);
+
     if (eventName === GROUPS_UPDATE) {
       /** @type {string} */
       this.chat = event.id;
@@ -255,7 +261,7 @@ export class Ctx {
     }
 
     if (this.sender?.includes(':')) this.sender = jidNormalizedUser(this.sender);
-    this.fromMe = this.sender === jidNormalizedUser(handler?.client?.sock?.user?.id) || this.fromMe;
+    this.fromMe = this.me ? this.sender === this.me : this.fromMe;
 
     /** @type {boolean} */
     this.isGroup = this.chat?.endsWith('@g.us');
