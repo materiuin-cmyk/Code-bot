@@ -9,7 +9,8 @@
  */
 
 import { jidNormalizedUser } from 'baileys';
-import { CONTACTS_UPDATE, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, PRESENCE_UPDATE } from './const.js';
+import { CALL, CONTACTS_UPDATE, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, PRESENCE_UPDATE } from './const.js';
+import pen from './pen.js';
 
 const skipMessageTypes = [
   'messageContextInfo',
@@ -208,6 +209,20 @@ export class Ctx {
       this.stanzaId = event.reaction.key?.id;
       this.remoteJid = event.reaction.key?.remoteJid;
       this.participant = event.reaction.key?.participant;
+    }
+
+    if (eventName === CALL) {
+      this.chat = event.groupJid ?? event.chatId;
+      this.sender = event.from;
+      this.id = event.id;
+      this.timestamp = event.date * 1000;
+      this.isGroup = event.isGroup;
+
+      /** @type {boolean} */
+      this.isVideo = event.isVideo;
+
+      /** @type {string} */
+      this.callStatus = event.status;
     }
 
     /* Parsing cmd */

@@ -14,7 +14,7 @@ import { platform } from 'os';
 import { pathToFileURL } from 'url';
 import { Plugin } from './plugin.js';
 import { Pen } from './pen.js';
-import { CONTACTS_UPDATE, CONTACTS_UPSERT, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, GROUPS_UPSERT, MESSAGES_REACTION, MESSAGES_UPSERT, PRESENCE_UPDATE } from './const.js';
+import { CALL, CONTACTS_UPDATE, CONTACTS_UPSERT, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, GROUPS_UPSERT, MESSAGES_REACTION, MESSAGES_UPSERT, PRESENCE_UPDATE } from './const.js';
 import { jidNormalizedUser } from 'baileys';
 import { genHEX, hashCRC32 } from './tools.js';
 import * as chokidar from 'chokidar';
@@ -464,6 +464,7 @@ export class Handler {
             break;
           }
 
+          case CALL:
           case MESSAGES_REACTION:
           case GROUPS_UPSERT:
           case CONTACTS_UPDATE:
