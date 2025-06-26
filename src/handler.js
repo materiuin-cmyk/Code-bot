@@ -23,7 +23,9 @@ import { WA_DEFAULT_EPHEMERAL } from 'baileys';
 export class Handler {
   constructor({ pluginDir, filter, prefix, pen, groupCache, contactCache, timerCache }) {
     this.pluginDir = pluginDir ?? '../plugins';
-    this.filters = filter;
+
+    /** @type {Function} */
+    this.filter = filter;
 
     /** @type {import('./client.js').Wangsaf} */
     this.client = null;
@@ -139,6 +141,10 @@ export class Handler {
       const hash = hashCRC32(location);
       const plugin = new Plugin(opt);
       plugin.location = location;
+
+      if (this.filter) {
+        if (!this.filter(this, plugin)) continue;
+      }
 
       const newid = `${hash}-${i}`;
       this.plugins.set(newid, plugin);
