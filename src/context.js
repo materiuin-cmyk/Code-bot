@@ -252,9 +252,10 @@ export class Ctx {
 
       this.fromMe = isOwnLID || this.fromMe;
       // this.senderLID = this.sender;
-    } else {
-      this.fromMe = this.sender === jidNormalizedUser(handler?.client?.sock?.user?.id) || this.fromMe;
     }
+
+    if (this.sender?.includes(':')) this.sender = jidNormalizedUser(this.sender);
+    this.fromMe = this.sender === jidNormalizedUser(handler?.client?.sock?.user?.id) || this.fromMe;
 
     /** @type {boolean} */
     this.isGroup = this.chat?.endsWith('@g.us');
