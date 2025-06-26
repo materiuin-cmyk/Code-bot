@@ -66,6 +66,17 @@ export default {
     const chatName = cleanName(c.chatName);
     const senderName = cleanName(c.senderName);
 
+    switch (c.eventType) {
+      case 'append': {
+        data.push('📩');
+        break;
+      }
+      case 'notify': {
+        data.push('📧');
+        break;
+      }
+    }
+
     switch (c.eventName) {
       case PRESENCE_UPDATE: {
         switch (c.presence) {
@@ -162,8 +173,7 @@ export default {
       }
 
       case CALL: {
-        data.push('📞');
-        data.push('from', pen.Blue(chatName));
+        data.push('📞', c.callStatus, 'from', pen.Blue(chatName));
         break
       }
 
