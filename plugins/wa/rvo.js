@@ -15,6 +15,7 @@ import pen from '../../src/pen.js';
 /** @type {import('../../src/plugin.js').Plugin} */
 export default {
   cmd: ['rvo', 'readviewonce'],
+  cat: 'whatsapp',
   desc: 'Read View Once messages',
   timeout: 15,
 
