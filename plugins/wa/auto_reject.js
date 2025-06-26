@@ -10,6 +10,7 @@
 
 import { CALL } from '../../src/const.js';
 import { eventNameIs, midwareAnd } from '../../src/midware.js';
+import pen from '../../src/pen.js';
 import { delay, randomNumber } from '../../src/tools.js';
 
 
@@ -26,7 +27,10 @@ export default {
 
   /** @param {import('../../src/context.js').Ctx} c */
   exec: async (c) => {
+    if (c.callStatus !== 'offer') return;
+
     await delay(randomNumber(1000, 2000));
+    pen.Warn('Rejecting call from', c.senderName, c.sender);
 
     await c.handler().client.sock.rejectCall(c.id, c.sender);
   }
