@@ -84,7 +84,11 @@ export class Ctx {
     /** @returns {import('baileys').WAMessage} */
     this.relayMessage = async (jid, content, options) => handler?.relayMessage(jid, content, options);
 
-    /** @returns {import('baileys').WAMessage} */
+    /** 
+     * @param {import('baileys').AnyMessageContent} content
+     * @param {import('baileys').MiscMessageGenerationOptions} options 
+     * @returns {import('baileys').WAMessage}
+     */
     this.reply = async (content, options) => {
       if (!this.chat) throw new Error('chat jid not provided');
       return await handler?.sendMessage(this.chat, content, options);
