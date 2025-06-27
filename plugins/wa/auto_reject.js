@@ -67,7 +67,7 @@ export default [
       } else {
         text = `Auto reject is not yet set.`;
       }
-      c.reply({ text: text + `\n\nNB :\n  *${pattern}* _to deactivating_\n  *${pattern}+* _to activating_` }, { qouted: c.message })
+      c.reply({ text: text + `\n\nNB :\n  *${pattern}-* _to deactivating_\n  *${pattern}+* _to activating_` }, { qouted: c.message })
     }
   }
 ]
