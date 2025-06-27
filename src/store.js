@@ -50,7 +50,7 @@ export class StoreJson {
   }
 
   set(key, value) {
-    if (!key || !value) return;
+    if (!key) return;
 
     this.data[key] = value;
     this.saveCheck();
