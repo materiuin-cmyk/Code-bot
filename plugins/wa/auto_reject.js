@@ -50,22 +50,24 @@ export default [
     ),
     exec: async (c) => {
       const key = `auto_reject_${c.me}`;
+      let pattern = c.pattern;
       if (c.pattern.endsWith('+')) {
         settings.set(key, true)
+        pattern = c.pattern.slice(0, -1);
         pen.Warn(`Activating auto reject for ${c.me}`);
       } else if (c.pattern.endsWith('-')) {
         settings.set(key, false)
+        pattern = c.pattern.slice(0, -1);
         pen.Warn(`Deactivating auto reject for ${c.me}`);
-      } else {
-        const set = settings.get(key);
-        let text = '';
-        if (set) {
-          text = `Auto reject status : *${set}*\n\nNB :\n  *${c.pattern}* _to deactivating_\n  *${c.pattern}+* _to activating_`
-        } else {
-          text = `Auto reject is not yet set.\n\nNB :\n  *${c.pattern}+* _to activating_`
-        }
-        c.reply({ text: text }, { qouted: c.message })
       }
+      const set = settings.get(key);
+      let text = '';
+      if (set) {
+        text = `Auto reject status : *${set}*`;
+      } else {
+        text = `Auto reject is not yet set.`;
+      }
+      c.reply({ text: text + `\n\nNB :\n  *${pattern}* _to deactivating_\n  *${pattern}+* _to activating_` }, { qouted: c.message })
     }
   }
 ]
