@@ -61,7 +61,19 @@ export default {
 
     texts.push('', `${cmdCount} cmd & ${c.handler()?.listens?.size} listener`);
     if (texts.length > 1) {
-      c.reply({ text: texts.join('\n') });
+      c.reply({
+        text: texts.join('\n'),
+        contextInfo: {
+          externalAdReply: {
+            title: 'Mushi Bot',
+            body: 'Simple a multi porpuses whatsapp bot.',
+            renderLargerThumbnail: true,
+            mediaType: 1,
+            thumbnailUrl: 'https://opengraph.githubassets.com/new/ginkohub/mushi',
+            sourceUrl: 'https://github.com/ginkohub/mushi'
+          }
+        }
+      }, {});
     }
   }
 };
