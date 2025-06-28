@@ -8,11 +8,18 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
+import Database from 'better-sqlite3';
 import pen from "./pen.js";
 import fs from 'fs';
 
-
+/**
+ * Store data in JSON file
+ */
 export class StoreJson {
+  /**
+   * @param {{saveName: string, autoSave: boolean, expiration: number}}
+   * @returns {StoreSQLite}
+   */
   constructor({ saveName, autoSave, expiration }) {
     if (!saveName) throw Error('saveName required');
 
@@ -76,5 +83,73 @@ export class StoreJson {
 
   has(key) {
     return key in this.data;
+  }
+}
+
+/**
+ * Store data in SQLite database
+ */
+export class StoreSQLite {
+  /**
+   * @param {{saveName: string, autoSave: boolean, expiration: number}}
+   * @returns {StoreSQLite}
+   */
+  constructor({ saveName, autoSave, expiration }) {
+    if (!saveName) throw Error('saveName required');
+
+    this.db = new Database(saveName);
+    this.db.pragma('journal_mode=WAL');
+    this.db.pragma('foreign_keys=ON');
+
+    this.autoSave = autoSave ?? false;
+    this.saveName = saveName;
+    this.expiration = expiration ?? 0;
+
+    this.load();
+  }
+
+  run_(sql, ...params) {
+    return this.db.prepare(sql).run(...params);
+  }
+
+  get_(sql, ...params) {
+    return this.db.prepare(sql).get(...params);
+  }
+
+  async load() {
+    return this.run_(`CREATE TABLE IF NOT EXISTS data (key TEXT PRIMARY KEY, value BLOB)`);
+  }
+
+  save() { }
+
+  set(key, value) {
+    if (!key) return;
+
+    return this.run_(`INSERT OR REPLACE INTO data (key, value) VALUES (?,?)`, key, JSON.stringify(value));
+  }
+
+  get(key) {
+    if (!key) return;
+    const row = this.get_(`SELECT value FROM data WHERE key = ?`, key);
+    if (!row) return;
+
+    return JSON.parse(row.value);
+  }
+
+  delete(key) {
+    if (!key) return;
+    return this.run_(`DELETE FROM data WHERE key = ?`, key);
+  }
+
+  clear() {
+    return this.run_(`DELETE FROM data`);
+  }
+
+  keys() {
+    return this.get_(`SELECT key FROM data`).map(row => row.key);
+  }
+
+  has(key) {
+    return this.get_(`SELECT 1 FROM data WHERE key = ?`, key) !== undefined;
   }
 }
