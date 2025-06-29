@@ -28,7 +28,7 @@ export default {
 
     const texts = ['*# Available menu*'];
 
-    const since = new Date() - c.handler()?.client?.dateStarted;
+    const since = new Date() - c.handler()?.client?.dateCreated;
     texts.push('', `Uptime: ${formatElapse(since)}`);
 
 
@@ -70,7 +70,8 @@ export default {
             renderLargerThumbnail: true,
             mediaType: 1,
             thumbnailUrl: 'https://opengraph.githubassets.com/new/ginkohub/mushi',
-            sourceUrl: 'https://github.com/ginkohub/mushi'
+            sourceUrl: 'https://github.com/ginkohub/mushi',
+            mediaUrl: 'https://github.com/ginkohub/mushi'
           }
         }
       }, {});
