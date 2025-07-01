@@ -55,6 +55,12 @@ const MINUTE = 60 * SECOND;
 const HOUR = 60 * MINUTE;
 
 /** 
+ * Number of milliseconds in a day
+ * @type {number}
+ */
+const DAY = 24 * HOUR;
+
+/** 
  * Format elapsed time into human readable string
  * 
  * @param {number} elapse - Time in milliseconds
@@ -62,7 +68,9 @@ const HOUR = 60 * MINUTE;
  */
 export function formatElapse(elapse) {
   let est = `${elapse}ms`;
-  if (elapse >= HOUR) {
+  if (elapse >= DAY) {
+    est = `${Math.floor(elapse / DAY)}d ${Math.floor((elapse % DAY) / HOUR)}h ${Math.floor((elapse % HOUR) / MINUTE)}m ${Math.floor((elapse % MINUTE) / SECOND)}s`;
+  } else if (elapse >= HOUR) {
     est = `${Math.floor(elapse / HOUR)}h ${Math.floor((elapse % HOUR) / MINUTE)}m ${Math.floor((elapse % MINUTE) / SECOND)}s`;
   } else if (elapse >= MINUTE) {
     est = `${Math.floor(elapse / MINUTE)}m ${Math.floor((elapse % MINUTE) / SECOND)}s`;
