@@ -107,6 +107,25 @@ export class Ctx {
      */
     this.react = async (emoji, key) => await handler.sendMessage(this.chat, { react: { text: emoji, key: key, } });
 
+    /**
+     * @param {string} text - Text to parse
+     */
+    this.parseText = (text) => {
+      this.text = text;
+
+      /* Parsing cmd */
+      if (text && text.length > 0) {
+        const splitted = text.split(' ');
+        /** @type {string} */
+        this.pattern = splitted[0];
+
+        /** @type {string} */
+        this.args = splitted.slice(1)?.join(' ');
+
+        /** @type {boolean} */
+        this.isCMD = handler?.isCMD(this.pattern);
+      }
+    };
 
     /** @type {string} */
     this.eventName = eventName;
@@ -186,6 +205,9 @@ export class Ctx {
       /** @type {string} */
       this.text = ext.text;
 
+      /* parse text for command and args */
+      this.parseText(ext.text);
+
       /** @type {import('baileys').WAContextInfo} */
       this.contextInfo = ext.contextInfo;
 
@@ -233,19 +255,6 @@ export class Ctx {
 
       /** @type {string} */
       this.callStatus = event.status;
-    }
-
-    /* Parsing cmd */
-    if (this.text && this.text.length > 0) {
-      const splitted = this.text.split(' ');
-      /** @type {string} */
-      this.pattern = splitted[0];
-
-      /** @type {string} */
-      this.args = splitted.slice(1)?.join(' ');
-
-      /** @type {boolean} */
-      this.isCMD = handler?.isCMD(this.pattern);
     }
 
     this.pushName = event?.pushName ?? this.pushName;
