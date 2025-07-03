@@ -8,7 +8,7 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
-import { CALL, CONTACTS_UPDATE, GROUP_PARTICIAPANTS_UPDATE, MESSAGES_REACTION, MESSAGES_UPSERT, PRESENCE_UPDATE } from '../../src/const.js';
+import { CALL, CHATS_UPDATE, CHATS_UPSERT, CONNECTION_UPDATE, CONTACTS_UPDATE, CREDS_UPDATE, GROUP_PARTICIAPANTS_UPDATE, MESSAGE_RECEIPT_UPDATE, MESSAGES_REACTION, MESSAGES_UPSERT, PRESENCE_UPDATE } from '../../src/const.js';
 import { BotDetector } from '../../src/detector.js';
 import pen from '../../src/pen.js';
 import { formatElapse } from '../../src/tools.js';
@@ -52,12 +52,21 @@ const cleanName = (str) => {
   return str;
 }
 
+const skipEvents = [
+  MESSAGE_RECEIPT_UPDATE,
+  CONNECTION_UPDATE,
+  CONTACTS_UPDATE,
+  CREDS_UPDATE,
+  CHATS_UPDATE,
+  CHATS_UPSERT,
+];
+
 /** @type {import('../../src/plugin.js').Plugin} */
 export default {
   desc: 'Logs the message to the console',
 
   midware: (c) => {
-    return ![CONTACTS_UPDATE].includes(c.eventName);
+    return !skipEvents.includes(c.eventName);
   },
 
   /** @param {import('../../src/context.js').Ctx} c */
