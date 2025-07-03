@@ -15,6 +15,7 @@ import { StoreJson } from '../../../src/store.js';
 import { getFile } from '../../../src/data.js';
 import { extactTextContext } from '../../../src/context.js';
 import { downloadMediaMessage } from 'baileys';
+import { formatMD } from '../../../src/tools.js';
 
 const gemini = await import(`./gemini.js?t=${new Date()}`).then(m => m.gemini);
 
@@ -30,17 +31,6 @@ const contentSupport = [
   'documentMessage',
   'stickerMessage',
 ];
-
-function formatMD(s) {
-  if (!s || typeof s !== 'string') return s;
-  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '_*$1*_');
-  s = s.replace(/\*\*(.+?)\*\*/g, '*$1*');
-  s = s.replace(/\*(.+?)\*/g, '_$1_');
-  s = s.replace(/~~(.+?)~~/g, '~$1~');
-  s = s.replace(/\w+\n(.+?)\n/g, '$1');
-  return s;
-}
-
 
 /**
  * @param {import('../../../src/context.js').Ctx} c
