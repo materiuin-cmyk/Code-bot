@@ -98,3 +98,30 @@ export function delay(ms) {
 export function randomNumber(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+const reBoldItalic = /\*\*\*(.+?)\*\*\*/g;
+const reBold = /\*\*(.+?)\*\*/g;
+const reItalic = /\*(.+?)\*/g;
+const reStrike = /~~(.+?)~~/g;
+const reMono = /```[\w]*\n([\s\S]+?)\n```/g;
+
+const BOLD_ITALIC_START = '#{BI}';
+const BOLD_ITALIC_END = '#{BE}';
+const BOLD = '#{BB}';
+const ITALIC = '#{II}';
+
+export function formatMD(s) {
+  if (!s || typeof s !== 'string') return s;
+  s = s.replace(reBoldItalic, `${BOLD_ITALIC_START}$1${BOLD_ITALIC_END}`);
+  s = s.replace(reBold, `${BOLD}$1${BOLD}`);
+  s = s.replace(reItalic, `${ITALIC}$1${ITALIC}`);
+  s = s.replace(reStrike, `~$1~`);
+
+  s = s.replace(new RegExp(BOLD_ITALIC_START, 'g'), '_*');
+  s = s.replace(new RegExp(BOLD_ITALIC_END, 'g'), '*_');
+  s = s.replace(new RegExp(BOLD, 'g'), '*');
+  s = s.replace(new RegExp(ITALIC, 'g'), '_');
+
+  s = s.replace(reMono, '```$1```');
+  return s;
+}
