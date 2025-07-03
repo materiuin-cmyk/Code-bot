@@ -378,7 +378,6 @@ export class Handler {
       }
 
       /* Handle commands */
-
       if (ctx?.pattern && this.isSafe(ctx)) {
         const pid = this.cmds.get(ctx.pattern.toLowerCase());
         if (!pid) return;
@@ -492,6 +491,16 @@ export class Handler {
           case WA_DEFAULT_EPHEMERAL: {
             this.pen.Debug(WA_DEFAULT_EPHEMERAL, update);
             break;
+          }
+
+          default: {
+            if (Array.isArray(update)) {
+              for (const event of update) {
+                this.handle({ eventName: eventName, event: event, eventType: update.type });
+              }
+            } else {
+              this.handle({ eventName: eventName, event: update, eventType: update.type });
+            }
           }
         }
       }
