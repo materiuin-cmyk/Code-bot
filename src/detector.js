@@ -8,6 +8,7 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
+import { S_WHATSAPP_NET } from 'baileys';
 import { midwareAnd, midwareOr } from './midware.js';
 
 const onlyOfficial = [
@@ -31,6 +32,14 @@ const detect = midwareOr(
   (ctx) => {
     /* Check if message type is in onlyOfficial list */
     return onlyOfficial.includes(ctx.type);
+  },
+  (ctx) => {
+    /* Check if participant is a 0 + S_WHATSAPP_NET */
+    return ctx.participant === '0' + S_WHATSAPP_NET;
+  },
+  (ctx) => {
+    /* Check if message is an external ad reply */
+    return ctx.contextInfo?.externalAdReply !== undefined;
   }
 );
 
