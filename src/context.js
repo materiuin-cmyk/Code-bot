@@ -10,7 +10,8 @@
 
 import { jidNormalizedUser } from 'baileys';
 import { CALL, CONTACTS_UPDATE, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, PRESENCE_UPDATE } from './const.js';
-import pen from './pen.js';
+import minimist from 'minimist';
+import parseArgsStringToArgv from 'string-argv';
 
 const skipMessageTypes = [
   'messageContextInfo',
@@ -124,6 +125,15 @@ export class Ctx {
 
         /** @type {boolean} */
         this.isCMD = handler?.isCMD(this.pattern);
+
+        if (this.args && this.args?.length > 0) {
+          try {
+            /** @type {import('minimist').ParsedArgs} */
+            this.argv = minimist(parseArgsStringToArgv(this.args));
+          } catch (e) {
+            /* do nothing */
+          }
+        }
       }
     };
 
