@@ -11,6 +11,46 @@
 import { S_WHATSAPP_NET } from 'baileys';
 import { midwareAnd, midwareOr } from './midware.js';
 
+class Reason {
+  constructor({ status, author, message }) {
+    /** @type {boolean} */
+    this.status = status;
+
+    /** @type {string} */
+    this.author = author;
+
+    /** @type {any} */
+    this.message = message;
+  }
+}
+
+async function And(...args) {
+  return async (c) => {
+    for (const arg of args) {
+      if (typeof arg !== 'function') continue;
+      /** @type {Reason} */
+      const result = await arg(c);
+      if (result?.status) return result;
+    }
+  }
+}
+
+async function Or(...args) {
+  return async (c) => {
+    for (const arg of args) {
+      if (typeof arg !== 'function') continue;
+      /** @type {Reason} */
+      const result = await arg(c);
+      if (!result?.status) return result;
+    }
+    return new Reason({
+      status: false,
+      message: ''
+    });
+  }
+}
+
+
 const onlyOfficial = [
   'buttonsMesage',
   'botInvokeMessage',
@@ -36,10 +76,6 @@ const detect = midwareOr(
   (ctx) => {
     /* Check if participant is a 0 + S_WHATSAPP_NET */
     return ctx.participant === '0' + S_WHATSAPP_NET;
-  },
-  (ctx) => {
-    /* Check if message is an external ad reply */
-    return ctx.contextInfo?.externalAdReply !== undefined;
   }
 );
 
