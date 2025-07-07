@@ -79,7 +79,11 @@ export class Ctx {
     /** @returns {string} */
     this.getName = (jid) => handler?.getName(jid);
 
-    /** @returns {import('baileys').WAMessage} */
+    /**
+     * @param {import('baileys').AnyMessageContent} content
+     * @param {import('baileys').MiscMessageGenerationOptions} options 
+     * @returns {import('baileys').WAMessage} 
+     * */
     this.sendMessage = async (jid, content, options) => handler?.sendMessage(jid, content, options);
 
     /** @returns {import('baileys').WAMessage} */
@@ -95,7 +99,11 @@ export class Ctx {
       return await handler?.sendMessage(this.chat, content, options);
     };
 
-    /** @returns {import('baileys').WAMessage} */
+    /**
+     * @param {import('baileys').AnyMessageContent} content
+     * @param {import('baileys').MiscMessageGenerationOptions} options
+     * @returns {import('baileys').WAMessage} 
+     */
     this.replyRelay = async (content, options) => {
       if (!this.chat) throw new Error('chat jid not provided');
       return await handler?.relayMessage(this.chat, content, options);
