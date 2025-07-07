@@ -309,5 +309,8 @@ export class Ctx {
         }
       }
     }
+
+    /** @type {boolean} */
+    this.isViewOnce = !this.type && this.event?.messageStubParameters?.includes('Message absent from node');
   }
 }
