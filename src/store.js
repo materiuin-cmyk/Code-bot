@@ -11,6 +11,7 @@
 import Database from 'better-sqlite3';
 import pen from "./pen.js";
 import fs from 'fs';
+import chokidar from 'chokidar';
 
 /**
  * Store data in JSON file
@@ -20,7 +21,7 @@ export class StoreJson {
    * @param {{saveName: string, autoSave: boolean, expiration: number}}
    * @returns {StoreSQLite}
    */
-  constructor({ saveName, autoSave, expiration }) {
+  constructor({ saveName, autoSave, expiration, autoLoad }) {
     if (!saveName) throw Error('saveName required');
 
     this.data = {};
@@ -28,6 +29,23 @@ export class StoreJson {
     this.autoSave = autoSave ?? false;
     this.saveName = saveName;
     this.expiration = expiration ?? 0;
+    this.saveState = true;
+
+    /* Watch changes on disk */
+    if (autoLoad) {
+      this.watcher = chokidar.watch(this.saveName, {
+        ignoreInitial: true,
+        usePolling: true,
+        interval: 1000,
+      }).on('change', (loc) => {
+        if (!this.saveState) {
+          pen.Debug('Reload', loc)
+          this.load();
+        } else {
+          this.saveState = false;
+        }
+      });
+    }
 
     this.load();
   }
@@ -45,6 +63,7 @@ export class StoreJson {
   save() {
     try {
       fs.writeFileSync(this.saveName, JSON.stringify(this.data, null, 2), 'utf8');
+      this.saveState = true;
     } catch (e) {
       pen.Error(e);
     }
