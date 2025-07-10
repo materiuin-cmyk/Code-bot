@@ -35,7 +35,7 @@ export default {
       /* Execute shell command */
       const stdout = execSync(src);
       if (stdout && stdout?.length > 0) {
-        c.reply({ text: `${stdout.toString()}` });
+        c.reply({ text: `${stdout.toString()}`.trim() });
       }
     } catch (e) {
       c.reply({ text: `${e}` });
