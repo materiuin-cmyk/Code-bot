@@ -33,13 +33,10 @@ export default {
 
     try {
       /* Execute shell command */
-      execSync(src, (error, stdout, stderr) => {
-        if (stdout && stdout?.length > 0) {
-          c.reply({ text: `${stdout}` });
-        } else if (stderr) {
-          c.reply({ text: `${stderr}` });
-        }
-      });
+      const stdout = execSync(src);
+      if (stdout && stdout?.length > 0) {
+        c.reply({ text: `${stdout.toString()}` });
+      }
     } catch (e) {
       c.reply({ text: `${e}` });
     }
