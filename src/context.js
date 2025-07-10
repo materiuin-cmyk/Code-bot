@@ -12,6 +12,7 @@ import { jidNormalizedUser } from 'baileys';
 import { CALL, CONTACTS_UPDATE, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, PRESENCE_UPDATE } from './const.js';
 import minimist from 'minimist';
 import parseArgsStringToArgv from 'string-argv';
+import pen from './pen.js';
 
 const skipMessageTypes = [
   'messageContextInfo',
@@ -95,6 +96,7 @@ export class Ctx {
      * @returns {import('baileys').WAMessage}
      */
     this.reply = async (content, options) => {
+      pen.Debug(this.chat, content);
       if (!this.chat) throw new Error('chat jid not provided');
       return await handler?.sendMessage(this.chat, content, options);
     };
@@ -287,8 +289,8 @@ export class Ctx {
 
     if (this.sender && this.sender?.endsWith('@lid')) {
       this.fromMe = this.sender === this.meLID || this.fromMe;
-    } else {
-      this.fromMe = this.me ? this.sender === this.me : this.fromMe;
+    } else if (this.sender && this.sender === this.me) {
+      this.fromMe = true;
     }
 
     /** @type {boolean} */
