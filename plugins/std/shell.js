@@ -11,7 +11,7 @@
 import { MESSAGES_UPSERT } from '../../src/const.js';
 import { eventNameIs, fromMe, midwareAnd } from '../../src/midware.js';
 import pen from '../../src/pen.js';
-import { exec } from 'child_process';
+import { execSync } from 'child_process';
 
 /** @type {import('../../src/plugin.js').Plugin} */
 export default {
@@ -33,12 +33,11 @@ export default {
 
     try {
       /* Execute shell command */
-      exec(src, (error, stdout, stderr) => {
-        if (stderr) {
-          c.reply({ text: `${stderr}` });
-        }
+      execSync(src, (error, stdout, stderr) => {
         if (stdout && stdout?.length > 0) {
           c.reply({ text: `${stdout}` });
+        } else if (stderr) {
+          c.reply({ text: `${stderr}` });
         }
       });
     } catch (e) {
