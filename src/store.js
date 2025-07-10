@@ -18,10 +18,10 @@ import chokidar from 'chokidar';
  */
 export class StoreJson {
   /**
-   * @param {{saveName: string, autoSave: boolean, expiration: number}}
+   * @param {{saveName: string, autoSave: boolean, autoLoad: boolean, expiration: number}}
    * @returns {StoreSQLite}
    */
-  constructor({ saveName, autoSave, expiration, autoLoad }) {
+  constructor({ saveName, autoSave, autoLoad, expiration }) {
     if (!saveName) throw Error('saveName required');
 
     this.data = {};
