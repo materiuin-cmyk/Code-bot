@@ -293,6 +293,8 @@ export class Ctx {
       this.fromMe = true;
     }
 
+    if (this.key) this.key.fromMe = this.fromMe;
+
     /** @type {boolean} */
     this.isGroup = this.chat?.endsWith('@g.us');
 
