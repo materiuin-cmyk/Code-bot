@@ -96,7 +96,6 @@ export class Ctx {
      * @returns {import('baileys').WAMessage}
      */
     this.reply = async (content, options) => {
-      pen.Debug(this.chat, content);
       if (!this.chat) throw new Error('chat jid not provided');
       return await handler?.sendMessage(this.chat, content, options);
     };
