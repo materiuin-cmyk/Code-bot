@@ -175,8 +175,10 @@ export default [
       let text = '';
       if (set) {
         text = `Defense status : *${set}*`;
+      } else if (set === false) {
+        text = `Defense status : *${set}*`;
       } else {
-        text = `Defense status is not yet set.`;
+        text = `Defense status : *${set}*`;
       }
       c.reply({ text: text + `\n\nNB :\n  *${pattern}-* _to deactivating_\n  *${pattern}+* _to activating_` }, { qouted: c.message })
     }
