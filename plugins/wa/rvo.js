@@ -41,7 +41,7 @@ export default {
         if (m[k].scansSidecar) m[k].scansSidecar = null;
       }
 
-      if (key === 'messageContextInfo') {
+      if (k === 'messageContextInfo') {
         delete m[k];
       }
     }
@@ -49,7 +49,6 @@ export default {
     if (m?.messageContextInfo) m.messageContextInfo = null;
 
     if (m) {
-      pen.Warn(m)
       c.relayMessage(c.chat, m);
     }
   }
