@@ -16,6 +16,8 @@ import { Pen } from "./pen.js";
 import { DisconnectReason } from "baileys";
 import { CONNECTION_UPDATE, CREDS_UPDATE } from "./const.js";
 import { useSQLite } from "./auth_sqlite.js";
+import { useMongoDB } from "./auth_mongo.js";
+import { usePostgres } from "./auth_postgres.js";
 import { unlinkSync } from "node:fs";
 
 
@@ -37,14 +39,17 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 /**
  *
  * @param {string} sessionStr 
- * @returns {{ state:import('baileys').AuthenticationState, saveCreds: Promise<void>, type: 'folder' | 'sqlite' | 'mongodb' } }
+ * @returns {{ state:import('baileys').AuthenticationState, saveCreds: Promise<void>, type: 'folder' | 'sqlite' | 'mongodb' | 'postgres' } }
  */
 export async function useStore(sessionStr) {
   if (!sessionStr) return null;
 
-  if (sessionStr.includes('mongodb')) {
-    const { state, saveCreds } = await userMongoDB(sessionStr);
+  if (sessionStr.startsWith('mongodb')) {
+    const { state, saveCreds } = await useMongoDB(sessionStr);
     return { state, saveCreds, type: 'mongodb' };
+  } else if (sessionStr.startsWith('postgres')) {
+    const { state, saveCreds } = await usePostgres(sessionStr);
+    return { state, saveCreds, type: 'postgres' };
   } else if (sessionStr.includes('.sqlite') || sessionStr.includes('.db')) {
     const { state, saveCreds } = await useSQLite(sessionStr);
     return { state, saveCreds, type: 'sqlite' };
