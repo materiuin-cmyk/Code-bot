@@ -11,6 +11,7 @@
 import { MESSAGES_UPSERT } from '../../src/const.js';
 import { eventNameIs, fromMe, midwareAnd, midwareOr } from '../../src/midware.js';
 import pen from '../../src/pen.js';
+import { settings } from '../settings.js';
 
 const allowed = [
   'extendedTextMessage',
@@ -85,6 +86,10 @@ export default [
     desc: 'Defense system',
     midware: midwareAnd(
       eventNameIs(MESSAGES_UPSERT),
+      async (c) => {
+        const key = `defense_${c.me}`;
+        return settings.get(key);
+      },
     ),
 
     /** @param {import('../../src/context.js').Ctx} c */
@@ -122,6 +127,7 @@ export default [
       }
     }
   },
+
   {
     cmd: ['smp'],
     cat: 'defense',
@@ -138,6 +144,40 @@ export default [
         fileName: `${c.chat}_${c.sender}_${c.timestamp}.json`,
         mimetype: 'application/json',
       });
+    }
+  },
+
+  {
+    cmd: ['defense', 'defense+', 'defense-'],
+    desc: 'Manage defense status',
+    timeout: 15,
+
+    midware: midwareAnd(
+      eventNameIs(MESSAGES_UPSERT),
+      fromMe,
+    ),
+
+    /** @param {import('../../src/context.js').Ctx} c */
+    exec: async (c) => {
+      const key = `defense_${c.me}`;
+      let pattern = c.pattern;
+      if (c.pattern.endsWith('+')) {
+        settings.set(key, true)
+        pattern = c.pattern.slice(0, -1);
+        pen.Warn(`Activating defense for ${c.me}`);
+      } else if (c.pattern.endsWith('-')) {
+        settings.set(key, false)
+        pattern = c.pattern.slice(0, -1);
+        pen.Warn(`Deactivating defense for ${c.me}`);
+      }
+      const set = settings.get(key);
+      let text = '';
+      if (set) {
+        text = `Defense status : *${set}*`;
+      } else {
+        text = `Defense status is not yet set.`;
+      }
+      c.reply({ text: text + `\n\nNB :\n  *${pattern}-* _to deactivating_\n  *${pattern}+* _to activating_` }, { qouted: c.message })
     }
   }
 ]
