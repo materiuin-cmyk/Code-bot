@@ -65,9 +65,9 @@ const skipEvents = [
 export default {
   desc: 'Logs the message to the console',
 
-  midware: (c) => {
-    return !skipEvents.includes(c.eventName);
-  },
+  midware: (c) => ({
+    success: !skipEvents.includes(c.eventName)
+  }),
 
   /** @param {import('../../src/context.js').Ctx} c */
   exec: async (c) => {
@@ -128,7 +128,7 @@ export default {
             data.push('⚠️', '');
           }
         }
-        if (detect.isBot(c)) data.push('🤖');
+        if ((await detect.isBot(c))?.success) data.push('🤖');
         if (c.sender?.endsWith('@lid')) data.push('🥷');
 
 

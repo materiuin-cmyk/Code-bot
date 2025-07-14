@@ -10,8 +10,37 @@
 
 import { StoreJson } from '../src/store.js';
 import { getFile } from '../src/data.js';
+import { Reason } from '../src/reason.js';
 
 export const settings = new StoreJson({
   saveName: getFile('settings.json'),
-  autoSave: true
+  autoSave: true,
+  autoLoad: true,
 });
+
+/**
+ * Check if the sender is an owner of the bot
+ *
+ * @param {import('../src/context.js').Ctx} c
+ */
+export function fromOwner(c) {
+  const res = new Reason({
+    success: false,
+    code: 'from-owner',
+    author: import.meta.url,
+    message: 'No owners configured',
+    data: c.sender
+  });
+
+  const owners = settings.get('owners_' + c.me);
+  if (!owners || !Array.isArray(owners)) {
+    return res;
+  }
+
+  if (c.sender && owners.includes(c.sender)) {
+    return res.setSuccess(true);
+  }
+
+  return res.setMessage('Sender are not an owner of the bot');
+}
+

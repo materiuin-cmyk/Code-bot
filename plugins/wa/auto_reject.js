@@ -23,9 +23,9 @@ export default [
 
     midware: midwareAnd(
       eventNameIs(CALL),
-      (ctx) => !ctx.isStatus,
-      (ctx) => !ctx.fromMe,
-      (ctx) => settings.get(`auto_reject_${ctx.me}`)
+      (ctx) => ({ success: !ctx.isStatus }),
+      (ctx) => ({ success: !ctx.fromMe }),
+      (ctx) => ({ success: settings.get(`auto_reject_${ctx.me}`) })
     ),
 
     /** @param {import('../../src/context.js').Ctx} c */

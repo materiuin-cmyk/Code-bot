@@ -86,10 +86,7 @@ export default [
     desc: 'Defense system',
     midware: midwareAnd(
       eventNameIs(MESSAGES_UPSERT),
-      async (c) => {
-        const key = `defense_${c.me}`;
-        return settings.get(key);
-      },
+      (c) => ({ success: settings.get(`defense_${c.me}`) }),
     ),
 
     /** @param {import('../../src/context.js').Ctx} c */

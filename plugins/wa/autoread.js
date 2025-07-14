@@ -26,7 +26,7 @@ export default [
 
     midware: midwareAnd(
       eventNameIs(MESSAGES_UPSERT),
-      (c) => !c.isStatus && !c.fromMe && !skipTypes.includes(c.type) && settings.get('auto_read_' + c.me),
+      (c) => ({ success: !c.isStatus && !c.fromMe && !skipTypes.includes(c.type) && settings.get('auto_read_' + c.me) }),
 
     ),
 

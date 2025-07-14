@@ -59,7 +59,9 @@ export default {
       }
     }
 
-    texts.push('', `${cmdCount} cmd & ${c.handler()?.listens?.size} listener`);
+    texts.push('',
+      '*Prefix :* ' + c.handler()?.prefix?.split('')?.map((p) => `\`${p}\``).join(', '),
+      '', `${cmdCount} cmd & ${c.handler()?.listens?.size} listener`);
     if (texts.length > 1) {
       c.reply({
         text: texts.join('\n'),

@@ -140,7 +140,7 @@ export default [
     desc: 'Gemini chat listener',
     midware: midwareAnd(
       eventNameIs(MESSAGES_UPSERT), fromMe,
-      (c) => chatWatch.has(c.stanzaId),
+      (c) => ({ success: chatWatch.has(c.stanzaId) }),
     ),
     exec: processChat
   }
