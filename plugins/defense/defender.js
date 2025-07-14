@@ -149,6 +149,7 @@ export default [
 
   {
     cmd: ['defense', 'defense+', 'defense-'],
+    cat: 'defense',
     desc: 'Manage defense status',
     timeout: 15,
 
