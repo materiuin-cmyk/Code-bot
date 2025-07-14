@@ -8,11 +8,13 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
+import { Reason } from './reason.js';
+
 /**
  * Plugin class for handling event as listener or command
  */
 export class Plugin {
-  constructor({ cmd, desc, cat, tags, disabled, hidden, timeout, noPrefix, midware, exec, location }) {
+  constructor({ cmd, desc, cat, tags, disabled, hidden, timeout, noPrefix, midware, exec, final, location }) {
     /** @type {import('./handler.js').Handler} */
     this.handler = null;
 
@@ -47,11 +49,14 @@ export class Plugin {
     /** @type {boolean} */
     this.noPrefix = noPrefix;
 
-    /** @type {(ctx: import('./context.js').Ctx) => Promise<boolean>} */
+    /** @type {(ctx: import('./context.js').Ctx) => Promise<Reason> | Reason} */
     this.midware = midware;
 
     /** @type {(ctx: import('./context.js').Ctx) => Promise<void>} */
     this.exec = exec;
+
+    /** @type {(ctx: import('./context.js').Ctx, reason: Reason) => Promise<void>} */
+    this.final = final;
 
     /** @type {string} */
     this.location = location;
@@ -61,18 +66,31 @@ export class Plugin {
    * Checker before execution
    *
    * @param {import('./context.js').Ctx} ctx
+   * @return {Promise<Reason>}
    */
   async check(ctx) {
-    if (this.disabled) return false;
+    const res = new Reason({
+      success: true,
+      code: 'plugin-checker',
+      author: this.location,
+      message: `This plugin is ready to execute`
+    });
+
+    if (this.disabled) return res.setSuccess(false)
+      .setCode('plugin-disabled')
+      .setMessage(`This plugin is disabled`);
 
     if (this.timeout > 0) {
       const diff = new Date().getTime() - ctx.timestamp;
-      if (diff > (this.timeout * 1000)) return false;
+      if (diff > (this.timeout * 1000)) return res.setSuccess(false)
+        .setCode('plugin-timeout')
+        .setMessage(`This plugin is timed out`);
     }
 
-    if (this.midware) return await this.midware(ctx);
-
-    return true;
+    if (this.midware) {
+      return new Reason(await this.midware(ctx));
+    }
+    return res;
   }
 
 }

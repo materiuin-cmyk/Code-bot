@@ -19,6 +19,7 @@ import { jidNormalizedUser } from 'baileys';
 import { genHEX, hashCRC32 } from './tools.js';
 import * as chokidar from 'chokidar';
 import { WA_DEFAULT_EPHEMERAL } from 'baileys';
+import { Reason } from './reason.js';
 
 export class Handler {
   constructor({ pluginDir, filter, prefix, pen, groupCache, contactCache, timerCache }) {
@@ -33,6 +34,7 @@ export class Handler {
     /** @type {import('./pen.js').Pen)} */
     this.pen = pen ?? new Pen({ prefix: 'hand' });
 
+    /** @type {string} */
     this.prefix = prefix ?? './';
 
     /** @type {Map<number, import('./plugin.js').Plugin>} */
@@ -357,14 +359,16 @@ export class Handler {
 
       for (const lsid of this.listens.values()) {
         try {
+          /** @type {import('./plugin.js').Plugin} */
           const listen = this.plugins.get(lsid);
           if (!listen) continue;
 
           ctx.plugin = () => listen;
 
           /* Check rules and midware before exec */
-          const passed = await listen.check(ctx);
-          if (!passed) {
+          const reason = await listen.check(ctx);
+          if (!reason?.success) {
+            if (listen?.final) await listen.final(ctx, reason);
             continue;
           }
 
@@ -372,6 +376,12 @@ export class Handler {
           if (listen.exec) await listen.exec(ctx);
         } catch (e) {
           this.pen.Error(e);
+          if (listen?.final) await listen.final(ctx, new Reason({
+            success: false,
+            code: 'handle-listen-error',
+            author: import.meta.url,
+            message: e.message,
+          }));
         } finally {
           ctx.plugin = null;
         }
@@ -381,14 +391,16 @@ export class Handler {
       if (ctx?.pattern && this.isSafe(ctx)) {
         const pid = this.cmds.get(ctx.pattern.toLowerCase());
         if (!pid) return;
+        /** @type {import('./plugin.js').Plugin} */
         const plugin = this.plugins.get(pid);
         if (plugin) {
           try {
             ctx.plugin = () => plugin;
 
             /* Check rules and midware before exec */
-            const passed = await plugin.check(ctx);
-            if (!passed) {
+            const reason = await plugin.check(ctx);
+            if (!reason?.success) {
+              if (plugin?.final) await plugin.final(ctx, reason);
               return;
             }
 
@@ -396,6 +408,12 @@ export class Handler {
             if (plugin.exec) await plugin.exec(ctx);
           } catch (e) {
             this.pen.Error(e);
+            if (listen?.final) await plugin.final(ctx, new Reason({
+              success: false,
+              code: 'handle-command-error',
+              author: import.meta.url,
+              message: e.message,
+            }));
           } finally {
             ctx.plugin = null;
           }
@@ -675,7 +693,7 @@ export class Handler {
     try {
       return await this.client.sock.relayMessage(jid, content, options);
     } catch (e) {
-      pen.Error(e);
+      this.pen.Error(e);
     }
   }
 

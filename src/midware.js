@@ -8,46 +8,127 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
+import { Reason } from './reason.js';
+
+/**
+ * A middleware function that checks if at least one of the provided middlewares passes.
+ *
+ * @param {...((ctx: import('./context.js').Ctx) => Promise<Reason> | Reason)} midwares - The middlewares to check.
+ * @returns {(ctx: import('./context.js').Ctx) => Promise<Reason>} A middleware function.
+ */
 export function midwareOr(...midwares) {
-  return (ctx) => {
+  return async (ctx) => {
     for (let midware of midwares) {
-      const result = midware(ctx);
-      if (result) {
-        return true;
+      const result = new Reason(await midware(ctx));
+      if (result?.success) {
+        return result;
       }
     }
-    return false;
+    return new Reason({
+      success: false,
+      code: 'midware-or',
+      author: import.meta.url,
+      message: 'Forbidden',
+    });
   };
 }
 
+/**
+ * A middleware function that checks if all of the provided middlewares pass.
+ *
+ * @param {...((ctx: import('./context.js').Ctx) => Promise<Reason> | Reason)} midwares - The middlewares to check.
+ * @returns {(ctx: import('./context.js').Ctx) => Promise<Reason>} A middleware function.
+ */
 export function midwareAnd(...midwares) {
-  return (ctx) => {
+  return async (ctx) => {
     for (let midware of midwares) {
-      const result = midware(ctx);
-      if (!result) {
-        return false;
+      const result = new Reason(await midware(ctx));
+      if (!result?.success) {
+        return result;
       }
     }
-    return true;
+    return new Reason({
+      success: true,
+      code: 'midware-and',
+      author: import.meta.url,
+      message: 'OK'
+    });
   };
 }
 
+/**
+ * A middleware function that checks if the event name is one of the provided names.
+ *
+ * @param {...string} names - The event names to check.
+ * @returns {(ctx: import('./context.js').Ctx) => Promise<Reason>} A middleware function.
+ */
 export function eventNameIs(...names) {
-  return (ctx) => {
-    return names?.includes(ctx?.eventName);
+  return async (ctx) => {
+    return new Reason({
+      success: names?.includes(ctx?.eventName),
+      code: 'midware-event-name-is',
+      author: import.meta.url,
+      message: 'Event name is not allowed'
+    });
   };
 }
 
+/**
+ * A middleware function that checks if the message is from the bot itself.
+ *
+ * @param {import('./context.js').Ctx} ctx - The context object.
+ * @returns {Reason} A reason object.
+ */
 export function fromMe(ctx) {
-  return ctx?.fromMe;
+  return new Reason({
+    success: ctx?.fromMe ? true : false,
+    code: 403,
+    author: import.meta.url,
+    message: 'It is not from me'
+  });
 }
 
+/**
+ * A middleware function that checks if the message is from a group.
+ *
+ * @param {import('./context.js').Ctx} ctx - The context object.
+ * @returns {Reason} A reason object.
+ */
 export function isGroup(ctx) {
-  return ctx?.isGroup;
+  return new Reason({
+    success: ctx?.isGroup ? true : false,
+    code: 'is-group',
+    author: import.meta.url,
+    message: 'It is not from a group'
+  });
 }
 
+/**
+ * A middleware function that checks if the message is from a private chat.
+ *
+ * @param {import('./context.js').Ctx} ctx - The context object.
+ * @returns {Reason} A reason object.
+ */
 export function isPrivate(ctx) {
-  return !ctx?.isGroup;
+  return new Reason({
+    success: ctx?.isGroup ? false : true,
+    code: 'is-private',
+    author: import.meta.url,
+    message: 'It is not from a private chat'
+  });
 }
 
-
+/**
+ * A middleware function that checks if the message is a status message.
+ *
+ * @param {import('./context.js').Ctx} ctx - The context object.
+ * @returns {Reason} A reason object.
+ */
+export function isStatus(ctx) {
+  return new Reason({
+    success: ctx?.isStatus ? true : false,
+    code: 'is-status',
+    author: import.meta.url,
+    message: 'It is not a status message'
+  });
+}
