@@ -36,7 +36,7 @@ export function getTime(format) {
   }
 
   for (const key in repl) {
-    format = format.replace(key, repl[key]);
+    format = format.replaceAll(key, repl[key]);
   }
   return format;
 }
@@ -79,6 +79,15 @@ export class Pen {
   Cyan(...args) { return this.asColor(36, ...args); }
   White(...args) { return this.asColor(37, ...args); }
 
+  BlackFG(...args) { return this.asColor(40, ...args); }
+  RedFG(...args) { return this.asColor(41, ...args); }
+  GreenFG(...args) { return this.asColor(42, ...args); }
+  YellowFG(...args) { return this.asColor(43, ...args); }
+  BlueFG(...args) { return this.asColor(44, ...args); }
+  MagentaFG(...args) { return this.asColor(45, ...args); }
+  CyanFG(...args) { return this.asColor(46, ...args); }
+  WhiteFG(...args) { return this.asColor(47, ...args); }
+
   BlackBr(...args) { return this.asColor(90, ...args); }
   RedBr(...args) { return this.asColor(91, ...args); }
   GreenBr(...args) { return this.asColor(92, ...args); }
@@ -87,6 +96,15 @@ export class Pen {
   MagentaBr(...args) { return this.asColor(95, ...args); }
   CyanBr(...args) { return this.asColor(96, ...args); }
   WhiteBr(...args) { return this.asColor(97, ...args); }
+
+  BlackBrFG(...args) { return this.asColor(100, ...args); }
+  RedBrFG(...args) { return this.asColor(101, ...args); }
+  GreenBrFG(...args) { return this.asColor(102, ...args); }
+  YellowBrFG(...args) { return this.asColor(103, ...args); }
+  BlueBrFG(...args) { return this.asColor(104, ...args); }
+  MagentaBrFG(...args) { return this.asColor(105, ...args); }
+  CyanBrFG(...args) { return this.asColor(106, ...args); }
+  WhiteBrFG(...args) { return this.asColor(107, ...args); }
 
   Log(...args) {
     if (this.prefix) {
