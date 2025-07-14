@@ -8,10 +8,10 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
-/** 
- * Generate hex string by given length and return as toUpperCase
- * @param {number} n - length of hex string
- * @returns {string} - hex string
+/**
+ * Generates a random hexadecimal string of a given length.
+ * @param {number} n The desired length of the hex string.
+ * @returns {string} The generated uppercase hex string.
  */
 export function genHEX(n) {
   let hex = "0123456789abcdef";
@@ -23,9 +23,9 @@ export function genHEX(n) {
 }
 
 /**
- * Generate hash crc32 by given string and return as toUpperCase
- * @param {string} str
- * @returns {string} - crc32 hash
+ * Computes the CRC32 hash of a string.
+ * @param {string} str The input string.
+ * @returns {string} The CRC32 hash as an uppercase hexadecimal string.
  */
 export function hashCRC32(str) {
   let crc = 0;
@@ -35,36 +35,34 @@ export function hashCRC32(str) {
   return (crc >>> 0).toString(16).toUpperCase();
 }
 
-
-/** 
- * Number of milliseconds in a second
+/**
+ * Number of milliseconds in a second.
  * @type {number}
  */
 const SECOND = 1000;
 
-/** 
- * Number of milliseconds in a minute
+/**
+ * Number of milliseconds in a minute.
  * @type {number}
  */
 const MINUTE = 60 * SECOND;
 
-/** 
- * Number of milliseconds in an hour
+/**
+ * Number of milliseconds in an hour.
  * @type {number}
  */
 const HOUR = 60 * MINUTE;
 
-/** 
- * Number of milliseconds in a day
+/**
+ * Number of milliseconds in a day.
  * @type {number}
  */
 const DAY = 24 * HOUR;
 
-/** 
- * Format elapsed time into human readable string
- * 
- * @param {number} elapse - Time in milliseconds
- * @returns {string} Formatted string (e.g. "5h 30m 20s", "45m 30s", "30s", "100ms")
+/**
+ * Formats elapsed time in milliseconds into a human-readable string.
+ * @param {number} elapse Time in milliseconds.
+ * @returns {string} Formatted string (e.g., "5d 12h 30m 20s", "45m 30s", "30s", "100ms").
  */
 export function formatElapse(elapse) {
   let est = `${elapse}ms`;
@@ -81,19 +79,20 @@ export function formatElapse(elapse) {
 }
 
 /**
- * Delay execution of a function for a given number of milliseconds
- * @param {number} ms - Number of milliseconds to delay
- * @returns {Promise} - Promise that resolves after the delay
+ * Creates a promise that resolves after a specified number of milliseconds.
+ * Useful for creating delays in async functions.
+ * @param {number} ms The number of milliseconds to delay.
+ * @returns {Promise<void>} A promise that resolves after the delay.
  */
 export function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
- * Generate a random number between min and max (inclusive)
- * @param {number} min - Minimum value
- * @param {number} max - Maximum value
- * @returns {number} - Random number between min and max
+ * Generates a random integer between a minimum and maximum value (inclusive).
+ * @param {number} min The minimum value.
+ * @param {number} max The maximum value.
+ * @returns {number} A random integer within the specified range.
  */
 export function randomNumber(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -110,6 +109,16 @@ const BOLD_ITALIC_END = '#{BE}';
 const BOLD = '#{BB}';
 const ITALIC = '#{II}';
 
+/**
+ * Formats a string with Markdown-like syntax to WhatsApp's formatting syntax.
+ * - `***bold-italic***` becomes `_*bold-italic*_`
+ * - `**bold**` becomes `*bold*`
+ * - `*italic*` becomes `_italic_`
+ * - `~~strike~~` becomes `~strike~`
+ * - ` ```code``` ` becomes ` ```code``` `
+ * @param {string} s The string to format.
+ * @returns {string} The formatted string.
+ */
 export function formatMD(s) {
   if (!s || typeof s !== 'string') return s;
   s = s.replace(reBoldItalic, `${BOLD_ITALIC_START}$1${BOLD_ITALIC_END}`);
@@ -127,9 +136,9 @@ export function formatMD(s) {
 }
 
 /**
- * Format bytes to human readable string
- * @param {number} bytes
- * @returns {string}
+ * Formats a number of bytes into a human-readable string (e.g., KB, MB, GB).
+ * @param {number} bytes The number of bytes.
+ * @returns {string} The formatted string representation of the bytes.
  */
 export function formatBytes(bytes) {
   if (bytes === 0) return '0 Bytes';
