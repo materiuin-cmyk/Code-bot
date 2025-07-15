@@ -8,11 +8,10 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
-import { jidNormalizedUser } from 'baileys';
+import { downloadMediaMessage, jidNormalizedUser } from 'baileys';
 import { CALL, CONTACTS_UPDATE, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, PRESENCE_UPDATE } from './const.js';
 import minimist from 'minimist';
 import parseArgsStringToArgv from 'string-argv';
-import pen from './pen.js';
 
 const skipMessageTypes = [
   'messageContextInfo',
@@ -24,7 +23,7 @@ const skipMessageTypes = [
  * @param {Partial<import('baileys').WAMessage>} m - Message object
  * @returns {{text: string, contextInfo: import('baileys').WAContextInfo | null, type: string}} Extracted text and context
  */
-export function extactTextContext(m) {
+export function extractTextContext(m) {
   let resp = {
     text: "",
     contextInfo: null,
@@ -36,7 +35,7 @@ export function extactTextContext(m) {
   for (let key in m) {
     if (key === 'protocolMessage') {
       if (m[key]?.editedMessage) {
-        resp = extactTextContext(m[key].editedMessage);
+        resp = extractTextContext(m[key].editedMessage);
         break;
       }
     }
@@ -216,7 +215,7 @@ export class Ctx {
     if (event.message) {
       /** @type {import('baileys').WAMessage} */
       this.message = event.message;
-      const ext = extactTextContext(event.message);
+      const ext = extractTextContext(event.message);
 
       /** @type {string} */
       this.type = ext.type;
@@ -232,7 +231,7 @@ export class Ctx {
 
       /** @type {import('baileys').WAMessage} */
       this.quotedMessage = ext?.contextInfo?.quotedMessage;
-      const qext = extactTextContext(this.quotedMessage);
+      const qext = extractTextContext(this.quotedMessage);
 
       /** @type {string} */
       this.quotedText = qext.text;
@@ -292,6 +291,11 @@ export class Ctx {
       this.fromMe = true;
     }
 
+    if (this.participant) {
+      /** @type {boolean} */
+      this.mentionMe = this.participant === this.me || this.participant === this.meLID;
+    }
+
     if (this.key) this.key.fromMe = this.fromMe;
 
     /** @type {boolean} */
@@ -302,18 +306,44 @@ export class Ctx {
 
     if (this.isGroup) {
       const data = handler?.getGroupMetadata(this.chat);
-      if (data) {
-        for (const part of data.participants) {
-          if (this.sender == part.jid || this.sender == part.lid || this.sender == part.id) {
-            /** @type {boolean} */
-            this.isAdmin = part.admin?.includes('admin');
-            // this.sender = part.jid ?? this.sender;
-          }
-        }
+      if (data && Array.isArray(data?.participants)) {
+        const part = data?.participants?.find(
+          part => (part.id == this.sender || part.jid == this.sender || part.lid == this.sender)
+        );
+
+        /** @type {boolean} */
+        this.isAdmin = ['admin', 'superadmin'].includes(part?.admin);
       }
     }
 
     /** @type {boolean} */
     this.isViewOnce = !this.type && this.event?.messageStubParameters?.includes('Message absent from node');
+
+    /**
+     * @param {import('baileys').WAMessage} m
+     * @param {'buffer' | 'stream'} output
+     * @param {import('baileys').DownloadMediaOptions} options
+     */
+    this.downloadIt = async (m, output, options) => {
+      if (!output || typeof output !== 'string' || output.length === 0) output = 'buffer';
+      return downloadMediaMessage({ message: m }, output, options)
+    }
+
+    /**
+    * @param {'buffer' | 'stream'} output
+    * @param {import('baileys').DownloadMediaOptions} options
+    */
+    this.download = async (output, options) => {
+      return this.downloadIt({ message: this.message }, output, options)
+    }
+
+    /**
+     * @param {'buffer' | 'stream'} output
+     * @param {import('baileys').DownloadMediaOptions} options
+     */
+    this.downloadQuoted = async (output, options) => {
+      if (!this.quotedMessage) return;
+      return this.downloadIt({ message: this.quotedMessage }, output, options)
+    }
   }
 }
