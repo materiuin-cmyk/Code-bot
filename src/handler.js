@@ -21,6 +21,9 @@ import * as chokidar from 'chokidar';
 import { WA_DEFAULT_EPHEMERAL } from 'baileys';
 import { Reason } from './reason.js';
 
+/**
+ * Handler class for handling plugins
+ */
 export class Handler {
   constructor({ pluginDir, filter, prefix, pen, groupCache, contactCache, timerCache }) {
     this.pluginDir = pluginDir ?? '../plugins';
@@ -84,7 +87,6 @@ export class Handler {
 
   /**
    * Set prefix for command plugins
-   *
    * @param {string} prefix
    */
   setPrefix(prefix) {
@@ -98,7 +100,6 @@ export class Handler {
 
   /**
    * Generate & registering command for given plugin
-   *
    * @param {string} id
    * @param {import('./plugin.js').Plugin} plugin
    */
@@ -130,7 +131,6 @@ export class Handler {
 
   /**
    * Add plugin to handler
-   *
    * @param {string} location
    * @param {import('./plugin.js').Plugin} opts 
    */
@@ -164,7 +164,6 @@ export class Handler {
 
   /**
    * Remove plugin by hash
-   *
    * @param {string} hash
    */
   async removeOn(hash) {
@@ -191,7 +190,6 @@ export class Handler {
 
   /**
    * Plugin scanner for given directory
-   *
    * @param {string} dir
    */
   async scanPlugin(dir) {
@@ -216,7 +214,6 @@ export class Handler {
 
   /**
    * Preload plugins before start
-   *
    * @param {...Function} callbacks
    */
   async preLoad(...callbacks) {
@@ -233,7 +230,6 @@ export class Handler {
 
   /**
    * Load plugin file from given location
-   *
    * @param {string} loc
    */
   async loadFile(loc) {
@@ -288,7 +284,6 @@ export class Handler {
 
   /** 
    * Get command by pattern
-   *
    * @param {string} p
    * @returns {import('./plugin.js').Plugin|undefined}
    */
@@ -301,7 +296,6 @@ export class Handler {
 
   /** 
    * Check if given pattern is a command
-   *
    * @param {string} p
    * @returns {boolean}
    */
@@ -312,7 +306,6 @@ export class Handler {
 
   /**
    * Check if given context id is already exist in watchID
-   * 
    * @param {import('./context.js').Ctx} ctx
    * @returns {boolean|undefined}
    */
@@ -328,7 +321,6 @@ export class Handler {
 
   /**
    * Check if given context is safe to execute
-   *
    * @param {import('./context.js').Ctx} ctx
    * @returns {boolean|undefined}
    */
@@ -343,7 +335,6 @@ export class Handler {
 
   /**
    * Handle event and passed it to all plugins whether it is a command or a listener
-   *
    * @param {{event: any, eventType: string, eventName: string}}
    */
   async handle({ event, eventType, eventName }) {
@@ -426,7 +417,6 @@ export class Handler {
 
   /**
    * Handle update data 
-   *
    * @param {import('./context.js').Ctx} ctx
    */
   async updateData(ctx) {
@@ -468,7 +458,6 @@ export class Handler {
 
   /** 
   * Attach client to handler & start listening for events
-  *
   * @param {import('./client.js').Wangsaf} client 
   */
   async attach(client) {
@@ -527,7 +516,6 @@ export class Handler {
 
   /**
    * Update group metadata by given jid
-   *
    * @param {string} jid
    * @param {string} via
    */
@@ -546,7 +534,6 @@ export class Handler {
 
   /**
    * Get group metadata by given jid
-   *
    * @param {string} jid
    * @returns {import('baileys').GroupMetadata|undefined}
    */
@@ -558,7 +545,6 @@ export class Handler {
 
   /**
    * Update contact by given jid & data
-   *
    * @param {string} jid
    * @param {import('baileys').Contact} data
    */
@@ -572,7 +558,6 @@ export class Handler {
 
   /**
    * Get contact by given jid
-   *
    * @param {string} jid
    * @returns {import('baileys').Contact|undefined}
    */
@@ -582,7 +567,6 @@ export class Handler {
 
   /**
    * Update timer by given jid & ephemeral
-   * 
    * @param {string} jid
    * @param {number} ephemeral
    * @param {string} via
@@ -613,7 +597,6 @@ export class Handler {
 
   /**
    * Get name by given jid
-   * 
    * @param {string} jid
    * @returns {string|undefined}
    */
@@ -640,23 +623,22 @@ export class Handler {
 
   /** 
   * Send message to given jid
-  *
   * @param {string} jid
   * @param {import('baileys').AnyMessageContent} content
   * @param {import('baileys').MessageGenerationOptions} options
   */
   async sendMessage(jid, content, options) {
-    if (!content) throw new Error('content not provided');
-    if (!options) options = {};
-
-    if (!options.messageId) options.messageId = genHEX(32);
-
-    const ephemeral = this.getTimer(jid);
-    if (ephemeral && ephemeral > 0) {
-      options.ephemeralExpiration = ephemeral;
-    }
-
     try {
+      if (!content) throw new Error('content not provided');
+      if (!options) options = {};
+
+      if (!options.messageId) options.messageId = genHEX(32);
+
+      const ephemeral = this.getTimer(jid);
+      if (ephemeral && ephemeral > 0) {
+        options.ephemeralExpiration = ephemeral;
+      }
+
       return await this.client.sock.sendMessage(jid, content, options);
     } catch (e) {
       this.pen.Error(e);
@@ -665,32 +647,31 @@ export class Handler {
 
   /**
    * Relay message to given jid
-   *
    * @param {string} jid
    * @param {import('baileys').proto.IMessage} content
    * @param {import('baileys').MessageGenerationOptions} options
    */
   async relayMessage(jid, content, options) {
-    if (!content) throw new Error('content not provided');
-    if (!options) options = {};
+    try {
+      if (!content) throw new Error('content not provided');
+      if (!options) options = {};
 
-    if (!options.messageId) options.messageId = genHEX(32);
+      if (!options.messageId) options.messageId = genHEX(32);
 
-    const ephemeral = this.getTimer(jid);
-    if (ephemeral && ephemeral > 0) {
-      for (let key in content) {
-        if (!content[key]) continue;
-        if (typeof content[key] === 'object') {
-          if (!content[key]?.contextInfo) {
-            content[key].contextInfo = { expiration: ephemeral };
-          } else {
-            content[key].contextInfo.expiration = ephemeral;
+      const ephemeral = this.getTimer(jid);
+      if (ephemeral && ephemeral > 0) {
+        for (let key in content) {
+          if (!content[key]) continue;
+          if (typeof content[key] === 'object') {
+            if (!content[key]?.contextInfo) {
+              content[key].contextInfo = { expiration: ephemeral };
+            } else {
+              content[key].contextInfo.expiration = ephemeral;
+            }
           }
         }
       }
-    }
 
-    try {
       return await this.client.sock.relayMessage(jid, content, options);
     } catch (e) {
       this.pen.Error(e);
