@@ -349,9 +349,9 @@ export class Handler {
       this.updateData(ctx);
 
       for (const lsid of this.listens.values()) {
+        /** @type {import('./plugin.js').Plugin} */
+        const listen = this.plugins.get(lsid);
         try {
-          /** @type {import('./plugin.js').Plugin} */
-          const listen = this.plugins.get(lsid);
           if (!listen) continue;
 
           ctx.plugin = () => listen;
@@ -426,7 +426,7 @@ export class Handler {
         case GROUPS_UPSERT:
         case GROUP_PARTICIAPANTS_UPDATE:
         case GROUPS_UPDATE: {
-          await this.updateGroupMetadata(ctx.chat, ctx.eventName);
+          await this.updateGroupMetadata(ctx.chat, ctx);
           break;
         }
 
@@ -517,16 +517,86 @@ export class Handler {
   /**
    * Update group metadata by given jid
    * @param {string} jid
-   * @param {string} via
+   * @param {import('./context.js').Ctx} ctx
    */
-  async updateGroupMetadata(jid, via) {
+  async updateGroupMetadata(jid, ctx) {
     try {
-      this.pen.Debug('Updating group metadata', jid, via ? `via ${via}` : '');
-      const data = await this.client.sock.groupMetadata(jid);
+      this.pen.Debug('Updating group metadata', jid, ctx ? `via ${ctx.eventName} with action : ${ctx.action}` : '');
+      let data = this.groupCache.get(jid);
+      let updated = false;
+
       if (data) {
-        this.groupCache.set(jid, data);
-        this.updateTimer(data.id, data.ephemeralDuration, via);
+
+        switch (ctx?.eventName) {
+          case GROUP_PARTICIAPANTS_UPDATE: {
+            switch (ctx?.action) {
+              case 'add': {
+                for (const add of ctx.mentionedJid) {
+                  const part = { id: add, admin: null };
+                  data.participants.push(part);
+                  updated = true;
+                }
+                break;
+              }
+              case 'remove': {
+                for (const rm of ctx.mentionedJid) {
+                  const i = data.participants?.findIndex((part) =>
+                    part.id === rm || part.lid === rm || part.jid === rm
+                  );
+                  if (i !== -1) {
+                    data.participants.splice(i, 1);
+                    updated = true;
+                  }
+                }
+                break;
+              }
+              case 'promote': {
+                data?.participants?.forEach((part) => {
+                  if (ctx.mentionedJid?.includes(part.id) || ctx.mentionedJid?.includes(part.lid)) {
+                    part.admin = 'admin';
+                    updated = true;
+                  }
+                });
+                break;
+              }
+              case 'demote': {
+                data?.participants?.forEach((part) => {
+                  if (ctx.mentionedJid?.includes(part.id) || ctx.mentionedJid?.includes(part.lid)) {
+                    part.admin = null;
+                    updated = true;
+                  }
+                });
+                break;
+              }
+              case 'modify': {
+                break;
+              }
+              default: { }
+            }
+            break;
+          }
+          case GROUPS_UPDATE: {
+            const skip = ['author', 'id'];
+            for (const key in ctx?.event) {
+              if (skip.includes(key)) continue;
+              data[key] = ctx.event[key];
+              updated = true;
+            }
+            break;
+          }
+        }
       }
+
+      if (!updated) {
+        data = await this.client.sock.groupMetadata(jid);
+      }
+
+      if (data) {
+        data.size = data.participants.length;
+        this.groupCache.set(jid, data);
+        this.updateTimer(data.id, data.ephemeralDuration, ctx?.eventName);
+      }
+
     } catch (e) {
       this.pen.Error(e);
     }
