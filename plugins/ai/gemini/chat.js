@@ -13,7 +13,7 @@ import { eventNameIs, fromMe, midwareAnd } from '../../../src/midware.js';
 import pen from '../../../src/pen.js';
 import { StoreJson } from '../../../src/store.js';
 import { getFile } from '../../../src/data.js';
-import { extactTextContext } from '../../../src/context.js';
+import { extractTextContext } from '../../../src/context.js';
 import { downloadMediaMessage } from 'baileys';
 import { formatMD } from '../../../src/tools.js';
 
@@ -55,7 +55,7 @@ async function processChat(c) {
 
   const msgs = [c.message, c.quotedMessage];
   for (const m of msgs) {
-    const ext = extactTextContext(m);
+    const ext = extractTextContext(m);
 
     if (!m || !ext) continue;
     if (!contentSupport.includes(ext.type)) continue;
