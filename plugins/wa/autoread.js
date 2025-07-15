@@ -45,6 +45,7 @@ export default [
   },
   {
     cmd: ['aread', 'aread+', 'aread-'],
+    cat: 'whatsapp',
     desc: 'Auto read message',
     timeout: 15,
 
