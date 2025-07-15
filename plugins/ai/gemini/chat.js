@@ -131,8 +131,6 @@ export default [
     midware: midwareAnd(
       eventNameIs(MESSAGES_UPSERT), fromMe,
     ),
-
-    /** @param {import('../../src/context.js').Ctx} c */
     exec: processChat
   },
   {
