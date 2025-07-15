@@ -16,7 +16,7 @@ import { Plugin } from './plugin.js';
 import { Pen } from './pen.js';
 import { CALL, CONTACTS_UPDATE, CONTACTS_UPSERT, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, GROUPS_UPSERT, MESSAGES_REACTION, MESSAGES_UPDATE, MESSAGES_UPSERT, PRESENCE_UPDATE } from './const.js';
 import { jidNormalizedUser } from 'baileys';
-import { genHEX, hashCRC32 } from './tools.js';
+import { genHEX, hashCRC32, shouldUsePolling } from './tools.js';
 import * as chokidar from 'chokidar';
 import { WA_DEFAULT_EPHEMERAL } from 'baileys';
 import { Reason } from './reason.js';
@@ -67,7 +67,7 @@ export class Handler {
     /* Watch changes in pluginDir */
     this.watcher = chokidar.watch(this.pluginDir, {
       ignoreInitial: true,
-      usePolling: true,
+      usePolling: shouldUsePolling(),
       interval: 1000,
     })
       .on('change', (loc) => {

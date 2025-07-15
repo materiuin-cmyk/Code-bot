@@ -8,6 +8,8 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
+import { fstat } from "fs";
+
 /**
  * Generates a random hexadecimal string of a given length.
  * @param {number} n The desired length of the hex string.
@@ -147,3 +149,15 @@ export function formatBytes(bytes) {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
+
+/**
+ * @returns {boolean} Whether to use polling instead of events for file changes.
+ */
+export function shouldUsePolling() {
+  try {
+    if (fs.existsSync('/.dockerenv')) return true;
+  } catch {
+    return true;
+  }
+  return false;
+}

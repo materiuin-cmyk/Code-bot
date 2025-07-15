@@ -12,6 +12,7 @@ import Database from 'better-sqlite3';
 import pen from "./pen.js";
 import fs from 'fs';
 import chokidar from 'chokidar';
+import { shouldUsePolling } from './tools.js';
 
 /**
  * Store data in JSON file
@@ -35,7 +36,7 @@ export class StoreJson {
     if (autoLoad) {
       this.watcher = chokidar.watch(this.saveName, {
         ignoreInitial: true,
-        usePolling: true,
+        usePolling: shouldUsePolling(),
         interval: 1000,
       }).on('change', (loc) => {
         if (!this.saveState) {
