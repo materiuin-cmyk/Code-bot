@@ -8,7 +8,7 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
-import { fstat } from "fs";
+import fs from "fs";
 
 /**
  * Generates a random hexadecimal string of a given length.
@@ -151,6 +151,7 @@ export function formatBytes(bytes) {
 };
 
 /**
+ * Checks if the current platform should use polling instead of events for file changes.
  * @returns {boolean} Whether to use polling instead of events for file changes.
  */
 export function shouldUsePolling() {
