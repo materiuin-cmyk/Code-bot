@@ -155,7 +155,7 @@ export class Ctx {
     this.eventType = eventType;
 
     /** @type {number} */
-    this.timestamp = event.messageTimestamp ? event.messageTimestamp * 1000 : new Date().getTime();
+    this.timestamp = event?.messageTimestamp ? event.messageTimestamp * 1000 : Date.now();
 
     /** @type {string} */
     this.me = jidNormalizedUser(handler?.client?.sock?.user?.id);
