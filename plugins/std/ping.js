@@ -10,10 +10,8 @@
 
 import { MESSAGES_UPSERT } from '../../src/const.js';
 import { eventNameIs, fromMe, midwareAnd, midwareOr } from '../../src/midware.js';
-import { formatBytes, formatElapse } from '../../src/tools.js';
-import { settings, fromOwner } from '../settings.js';
-import os from 'os';
-import process from 'process';
+import { formatElapse } from '../../src/tools.js';
+import { fromOwner } from '../settings.js';
 
 /** @type {import('../../src/plugin.js').Plugin} */
 export default {
@@ -33,23 +31,21 @@ export default {
 
   /** @param {import('../../src/context.js').Ctx} c */
   exec: async (c) => {
-    const current = new Date().getTime();
-    const latency = current - c.timestamp;
-    const uptime = new Date() - c.handler().client.dateCreated;
-    const { rss, heapUsed } = process.memoryUsage();
+    const current = Date.now();
+    let latency = current - c.timestamp;
 
-    const text = `*「 PONG 」*
+    let text = `*⏱️ Late:* ${formatElapse(latency)}`;
 
-*⏱️ Latency:* ${formatElapse(latency)}
-*🚀 Uptime:* ${formatElapse(uptime)}
+    const beforeSend = Date.now();
+    const resp = await c.reply({ text });
+    const afterSend = Date.now();
 
-*💻 System:*
-  - *OS:* ${os.type()} ${os.release()} (${os.arch()})
-  - *CPU:* ${os.cpus().length} Core(s)
-  - *Memory:* ${formatBytes(heapUsed)} / ${formatBytes(rss)}
-`.trim();
-
-    c.reply({ text });
+    latency = afterSend - beforeSend;
+    text += `\n*⏱️ Resp:* ${formatElapse(latency)}`;
+    c.reply({
+      text: text,
+      edit: resp.key
+    })
   }
 };
 
