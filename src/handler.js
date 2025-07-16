@@ -534,7 +534,7 @@ export class Handler {
                 for (const add of ctx.mentionedJid) {
                   const part = { id: add, admin: null };
                   data.participants.push(part);
-                  updated = true;
+                  updated = true && !add.endsWith('@lid');
                 }
                 break;
               }
@@ -657,7 +657,6 @@ export class Handler {
 
   /**
    * Get timer by given jid
-   * 
    * @param {string} jid
    * @returns {number|undefined}
    */
