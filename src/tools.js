@@ -66,16 +66,31 @@ const DAY = 24 * HOUR;
  * @param {number} elapse Time in milliseconds.
  * @returns {string} Formatted string (e.g., "5d 12h 30m 20s", "45m 30s", "30s", "100ms").
  */
-export function formatElapse(elapse) {
+export function formatElapse(elapse, space) {
+  if (!space) space = '';
   let est = `${elapse}ms`;
   if (elapse >= DAY) {
-    est = `${Math.floor(elapse / DAY)}d ${Math.floor((elapse % DAY) / HOUR)}h ${Math.floor((elapse % HOUR) / MINUTE)}m ${Math.floor((elapse % MINUTE) / SECOND)}s`;
+    est = [
+      `${Math.floor(elapse / DAY)}d`,
+      `${Math.floor((elapse % DAY) / HOUR)}h`,
+      `${Math.floor((elapse % HOUR) / MINUTE)}m`,
+      `${Math.floor((elapse % MINUTE) / SECOND)}s`
+    ].join(space);
   } else if (elapse >= HOUR) {
-    est = `${Math.floor(elapse / HOUR)}h ${Math.floor((elapse % HOUR) / MINUTE)}m ${Math.floor((elapse % MINUTE) / SECOND)}s`;
+    est = [
+      `${Math.floor((elapse % DAY) / HOUR)}h`,
+      `${Math.floor((elapse % HOUR) / MINUTE)}m`,
+      `${Math.floor((elapse % MINUTE) / SECOND)}s`
+    ].join(space);
   } else if (elapse >= MINUTE) {
-    est = `${Math.floor(elapse / MINUTE)}m ${Math.floor((elapse % MINUTE) / SECOND)}s`;
+    est = [
+      `${Math.floor((elapse % HOUR) / MINUTE)}m`,
+      `${Math.floor((elapse % MINUTE) / SECOND)}s`
+    ].join(space);
   } else if (elapse >= SECOND) {
-    est = `${Math.floor(elapse / SECOND)}s`;
+    est = [
+      `${Math.floor((elapse % MINUTE) / SECOND)}s`
+    ].join(space);
   }
   return est
 }
