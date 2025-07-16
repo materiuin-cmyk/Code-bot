@@ -18,7 +18,7 @@ import { CONNECTION_UPDATE, CREDS_UPDATE } from "./const.js";
 import { useSQLite } from "./auth_sqlite.js";
 import { useMongoDB } from "./auth_mongo.js";
 import { usePostgres } from "./auth_postgres.js";
-import { unlinkSync } from "node:fs";
+import { rmSync, unlinkSync } from "node:fs";
 
 
 /* Initialize readline */
@@ -59,7 +59,26 @@ export async function useStore(sessionStr) {
   }
 }
 
+/**
+ * @typedef {Object} Config
+ * @property {string} session
+ * @property {string} dataDir
+ * @property {string} phone
+ * @property {'qr' | 'otp'} method
+ * @property {import('baileys').WABrowserDescription} browser
+ * @property {import('./handler.js').Handler} handler
+ * @property {import('baileys').UserFacingSocketConfig} socketOptions
+ * @property {boolean} retry
+ * @property {import('./pen.js').Pen} pen
+ */
+
+/**
+ * WhatsApp client class
+ */
 export class Wangsaf {
+  /**
+   * @param {Config} config
+   */
   constructor({
     session,
     dataDir,
@@ -71,19 +90,40 @@ export class Wangsaf {
     retry,
     pen
   }) {
+    /** @type {import('baileys').WASocket} */
     this.sock = null;
+
+    /** @type {string} */
     this.session = session;
+
+    /** @type {string} */
     this.dataDir = dataDir;
+
+    /** @type {string} */
     this.phone = phone;
+
+    /** @type {'qr' | 'otp'} */
     this.method = method;
+
+    /** @type {import('baileys').WABrowserDescription} */
     this.browser = browser;
 
     /** @type {import('./handler.js').Handler} */
     this.handler = handler;
+
+    /** @type {import('baileys').UserFacingSocketConfig} */
     this.socketOptions = socketOptions;
+
+    /** @type {boolean} */
     this.retry = retry;
+
+    /** @type {import('./pen.js').Pen} */
     this.pen = pen ?? new Pen({ prefix: 'sys' });
-    this.dateCreated = new Date();
+
+    /** @type {Date} */
+    this.dateCreated = Date.now();
+
+    /** @type {Date} */
     this.dateStarted = null;
   }
 
@@ -153,10 +193,11 @@ export class Wangsaf {
         const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
         if (shouldReconnect) {
           if (this.retry) {
-            this.pen.Debug(CONNECTION_UPDATE, 'Reconnecting...');
-            this.connect()
+            this.pen.Debug(CONNECTION_UPDATE, `Reconnecting...`);
+            await delay(3000);
+            this.connect();
           } else {
-            this.pen.Debug(CONNECTION_UPDATE, 'Not retrying');
+            this.pen.Error(CONNECTION_UPDATE, 'Not retrying.');
           }
         } else if (statusCode === DisconnectReason.loggedOut) {
           this.pen.Debug(CONNECTION_UPDATE, 'Logged out, closing connection');
@@ -164,7 +205,7 @@ export class Wangsaf {
             switch (type) {
               case "folder": {
                 /* Destroy session directory */
-                unlinkSync(this.session);
+                rmSync(this.session, { recursive: true });
                 break;
               }
               case "sqlite": {
@@ -178,6 +219,8 @@ export class Wangsaf {
 
           } catch (e) {
             this.pen.Error(e);
+          } finally {
+            this.connect();
           }
         }
       } else if (connection === 'open') {
