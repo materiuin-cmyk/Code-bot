@@ -26,12 +26,26 @@ export default {
   /** @param {import('../../src/context.js').Ctx} c */
   exec: async (c) => {
     const src = c.args?.trim();
-    if (!src) return;
+    if (!src) {
+      c.react('⁉️', c.key);
+      return;
+    }
 
     try {
       let res = await eval(`(async () => { ${src} })()`);
+      if (!res) {
+        c.react('❔', c.key);
+        return;
+      }
+
+      if (typeof res === 'object' && !(
+        res instanceof Buffer
+
+      )) res = JSON.stringify(res, null, 2);
+
       c.reply({ text: `${res}` });
     } catch (e) {
+      c.react('‼️', c.key);
       c.reply({ text: `${e}` });
     }
   }
