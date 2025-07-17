@@ -8,7 +8,9 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
+import { dir } from "console";
 import fs from "fs";
+import { pathToFileURL } from "url";
 
 /**
  * Generates a random hexadecimal string of a given length.
@@ -176,4 +178,18 @@ export function shouldUsePolling() {
     return true;
   }
   return false;
+}
+
+/**
+ * Import module with timestamp
+ * @param {string} path The path to the module.
+ * @param {import.meta} meta
+ * @returns {any} The imported module.
+ */
+export async function importy(path, meta) {
+  const dirs = [];
+  if (meta) dirs.push(meta.dirname);
+  dirs.push(path);
+  const loc = pathToFileURL(dirs.join('/')).href;
+  return import(loc + '?t=' + Date.now());
 }
