@@ -8,12 +8,11 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
-import { Browsers, makeWASocket, useMultiFileAuthState } from "baileys";
+import { Browsers, makeWASocket, useMultiFileAuthState, DisconnectReason } from "baileys";
 import readline from "node:readline";
 import pino from "pino";
 import QRCode from "qrcode";
 import { Pen } from "./pen.js";
-import { DisconnectReason } from "baileys";
 import { CONNECTION_UPDATE, CREDS_UPDATE } from "./const.js";
 import { useSQLite } from "./auth_sqlite.js";
 import { useMongoDB } from "./auth_mongo.js";
