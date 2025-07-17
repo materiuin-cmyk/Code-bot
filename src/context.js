@@ -326,7 +326,9 @@ export class Ctx {
      */
     this.downloadIt = async (m, output, options) => {
       if (!output || typeof output !== 'string' || output.length === 0) output = 'buffer';
-      return downloadMediaMessage({ message: m }, output, options)
+      if (m?.message?.documentWithCaptionMessage) m = m.message.documentWithCaptionMessage;
+      if (m?.message?.viewOnceMessage) m = m.message.viewOnceMessage;
+      return downloadMediaMessage(m, output, options);
     }
 
     /**
