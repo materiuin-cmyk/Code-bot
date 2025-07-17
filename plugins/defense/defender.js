@@ -128,6 +128,7 @@ export default [
   {
     cmd: ['smp'],
     cat: 'defense',
+    desc: 'Create and send sample message as json.',
     timeout: 15,
     midware: midwareAnd(
       eventNameIs(MESSAGES_UPSERT),
