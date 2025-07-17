@@ -19,7 +19,7 @@ const youtube = google.youtube('v3');
 
 /** @type {import('../../src/plugin.js').Plugin} */
 export default {
-  cmd: ['ytmp3', 'play'],
+  cmd: ['play'],
   cat: 'downloader',
   tags: ['youtube', 'downloader', 'mp3'],
   desc: 'Search for a video on YouTube, download the audio using Hikaru API, and send it.',
