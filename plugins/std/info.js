@@ -13,7 +13,8 @@ import fs from 'fs';
 import { execSync } from 'child_process';
 import { formatBytes, formatElapse } from '../../src/tools.js';
 import { MESSAGES_UPSERT } from '../../src/const.js';
-import { eventNameIs } from '../../src/midware.js';
+import { eventNameIs, fromMe, midwareAnd, midwareOr } from '../../src/midware.js';
+import { fromOwner } from '../settings.js';
 
 function getDistro() {
   const platform = os.platform();
@@ -59,7 +60,11 @@ export default {
   cat: 'system',
   tags: ['system'],
   desc: 'Show server information.',
-  midware: eventNameIs(MESSAGES_UPSERT),
+  midware:
+    midwareAnd(
+      eventNameIs(MESSAGES_UPSERT),
+      midwareOr(fromMe, fromOwner)
+    )
 
   /** @param {import('../../src/context.js').Ctx} c */
   exec: async (c) => {
