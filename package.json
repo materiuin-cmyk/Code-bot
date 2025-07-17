@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/ginkohub/mushi#readme",
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
+    "@google/genai": "^1.9.0",
     "baileys": "github:ginkohub/baileys#ginko",
     "better-sqlite3": "^11.10.0",
     "cheerio": "^1.1.0",

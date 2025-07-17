@@ -1,21 +1,20 @@
 /**
  * Copyright (C) 2025 Ginko
  *
- * This Source Code Form is subject to the terms of the Mozilla Public
+* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/
  *
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { GoogleAIFileManager, FileState } from "@google/generative-ai/server";
+import { GoogleGenAI } from '@google/genai';
 
 /**
  * @typedef {Object} Gemini - Gemini AI model
- * @property {import('@google/generative-ai').GoogleGenerativeAI} [genAI] - Google Generative AI instance
- * @property {import('@google/generative-ai').GenerativeModel} [model] - Generative model instance
- * @property {Map<string,import('@google/generative-ai').ChatSession>} [chats] - Chat sessions map
+ * @property {import('@google/genai').GoogleGenAI} [genAI] - Google Generative AI instance
+ * @property {import('@google/genai').Model} [model] - Generative model instance
+ * @property {Map<string,import('@google/genai').Session>} [chats] - Chat sessions map
  */
 
 const DEFAULT_SYSTEM_INSTRUCTION = [
@@ -36,42 +35,77 @@ export class Gemini {
    * @returns {Gemini}
    */
   constructor(options) {
-    this.genAI = new GoogleGenerativeAI(options.apiKey ?? process.env.GEMINI_API_KEY);
-    this.model = this.genAI.getGenerativeModel({
-      model: options.modelName ?? 'gemini-2.0-flash',
-      systemInstruction: options.systemInstruction ?? DEFAULT_SYSTEM_INSTRUCTION.join(' '),
-    });
-    this.fileManger = new GoogleAIFileManager(options.apiKey ?? process.env.GEMINI_API_KEY);
+    this.genAI = new GoogleGenAI({ apiKey: options.apiKey ?? process.env.GEMINI_API_KEY });
 
-    this.uploadFile = this.fileManger?.uploadFile;
-    this.getFile = this.fileManger?.getFile;
-    this.deleteFile = this.fileManger?.deleteFile;
-    this.listFiles = this.fileManger?.listFiles;
-    this.clearFiles = () => {
-      this.fileManger?.listFiles().then((files) => {
-        files.forEach((file) => {
-          if (file.state === FileState.READY) {
-            this.fileManger?.deleteFile(file.name);
-          }
-        });
-      });
+    /** @type {string} */
+    this.modelName = options.modelName ?? 'gemini-2.0-flash';
+
+    /** @type {string} */
+    this.systemInstruction = options.systemInstruction ?? DEFAULT_SYSTEM_INSTRUCTION.join(' ');
+
+    /** @param {import('@google/genai').UploadFileParameters} params */
+    this.uploadFile = async (params) => await this.genAI.files.upload(params);
+
+    /** @param {string} name */
+    this.getFile = async (name) => await this.genAI.files.get({ name: name });
+
+    /** @param {string} name */
+    this.deleteFile = async (name) => await this.genAI.files.delete({ name: name });
+
+    /** @returns {Promise<Array<import('@google/genai').File>>} */
+    this.listFiles = async () => await this.genAI.files.list({});
+
+    this.clearFiles = async () => {
+      const files = await this.listFiles();
+      for (const file of files) {
+        await this.genAI.files.delete({
+          name: file.name
+        })
+      }
     }
 
+    /** @type {Map<string,import('@google/genai').Chat>} */
     this.chats = new Map();
   }
 
   /**
-   * Sends a message to the Gemini AI model
-   * @param {string} chatID - chat ID
-   * @param {Array<string | import('@google/generative-ai').Part>} parts - message to send
+   * @param {string} id
+   * @param {import('@google/genai').SendMessageParameters} params
+   * @returns {Promise<import('@google/genai').GenerateContentResponse>}
    */
-  async send(chatID, parts) {
-    if (!this.chats.has(chatID)) this.chats.set(chatID, this.model.startChat({}));
+  async chat(id, params) {
+    if (!id) return;
+    if (!params) return;
+    let chat = this.chats.get(id);
+    if (!chat) {
+      chat = this.genAI.chats.create({
+        model: this.modelName,
+        config: {
+          systemInstruction: {
+            text: this.systemInstruction,
+          }
+        }
+      })
+      this.chats.set(id, chat);
+    }
 
-    /** @type {import('@google/generative-ai').ChatSession} */
-    const chat = this.chats.get(chatID);
+    return await chat.sendMessage(params);
+  }
 
-    return await chat.sendMessage(parts);
+  /**
+   * Generates a response to the given message
+   * @param {import('@google/genai').GenerateContentParameters} params - Parameter to generate a response for
+   * @returns {Promise<import('@google/genai').GenerateContentResponse>}
+   */
+  async generate(params) {
+    if (!params) return;
+    if (!params?.model) params.model = this.modelName;
+    if (!params?.config) params.config = {};
+    if (!params.config?.systemInstruction) params.config.systemInstruction = {
+      text: DEFAULT_SYSTEM_INSTRUCTION.join('\n'),
+    };
+
+    return await this.genAI.models.generateContent(params);
   }
 }
 

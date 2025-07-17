@@ -17,6 +17,7 @@ import { extractTextContext } from '../../../src/context.js';
 import { downloadMediaMessage } from 'baileys';
 import { formatMD } from '../../../src/tools.js';
 
+/** @type {import('./gemini.js').Gemini} */
 const gemini = await import(`./gemini.js?t=${new Date()}`).then(m => m.gemini);
 
 const chatWatch = new StoreJson({
@@ -46,12 +47,12 @@ async function processChat(c) {
     }
   }
 
-  /** @type {import('@google/generative-ai').Part[]} */
+  /** @type {import('@google/genai').PartListUnion} */
   const parts = [];
 
   query = query.trim();
 
-  if (query || query.length > 0) parts.push(query);
+  if (query || query.length > 0) parts.push({ text: query });
 
   const msgs = [c.message, c.quotedMessage];
   for (const m of msgs) {
@@ -108,8 +109,9 @@ async function processChat(c) {
     try {
       pen.Debug(`Parts ${parts.length}, Query : ${query?.length}`);
 
-      const resp = await gemini.send(this.chat, parts);
-      const respText = formatMD(resp?.response?.text()?.trim());
+      const resp = await gemini.chat(c.chat, { message: parts });
+      const respText = formatMD(resp?.text?.trim());
+
       if (!respText || respText?.length === 0) return;
       const sent = await c.reply({ text: `${respText}` }, { quoted: c.event });
       if (sent) {
