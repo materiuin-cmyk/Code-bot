@@ -60,11 +60,10 @@ export default {
   cat: 'system',
   tags: ['system'],
   desc: 'Show server information.',
-  midware:
-    midwareAnd(
-      eventNameIs(MESSAGES_UPSERT),
-      midwareOr(fromMe, fromOwner)
-    )
+  midware: midwareAnd(
+    eventNameIs(MESSAGES_UPSERT),
+    midwareOr(fromMe, fromOwner)
+  ),
 
   /** @param {import('../../src/context.js').Ctx} c */
   exec: async (c) => {
