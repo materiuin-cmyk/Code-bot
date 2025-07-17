@@ -81,6 +81,7 @@ async function processChat(c) {
         content = m.videoMessage;
         break;
       }
+      case 'documentWithCaptionMessage':
       case 'documentMessage': {
         mtype = 'document';
         content = m.documentMessage;
