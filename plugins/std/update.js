@@ -28,9 +28,9 @@ export default {
 
   /** @param {import('../../src/context.js').Ctx} c */
   exec: async (c) => {
+    /* waiting */
+    c.react('⌛', c.key);
     const src = 'git fetch ; git pull';
-    if (!src) return;
-
     try {
       /* Execute shell command */
       const stdout = execSync(src);
@@ -38,7 +38,10 @@ export default {
         c.reply({ text: `${stdout.toString()}`.trim() });
       }
     } catch (e) {
+      c.react('❌', c.key);
       c.reply({ text: `${e}` });
+    } finally {
+      c.react('', c.key);
     }
   }
 };
