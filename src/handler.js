@@ -742,8 +742,6 @@ export class Handler {
           }
         }
       }
-
-      this.pen.Debug(content);
       return await this.client.sock.relayMessage(jid, content, options);
     } catch (e) {
       this.pen.Error(e);
