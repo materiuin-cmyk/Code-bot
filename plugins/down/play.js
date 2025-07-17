@@ -22,7 +22,7 @@ export default {
   cmd: ['play'],
   cat: 'downloader',
   tags: ['youtube', 'downloader', 'mp3'],
-  desc: 'Search for a video on YouTube, download the audio using Hikaru API, and send it.',
+  desc: 'Search for a video on YouTube, download the audio.',
   midware: midwareAnd(
     eventNameIs(MESSAGES_UPSERT),
     midwareOr(fromOwner, fromMe),
