@@ -695,6 +695,7 @@ export class Handler {
   * @param {string} jid
   * @param {import('baileys').AnyMessageContent} content
   * @param {import('baileys').MessageGenerationOptions} options
+  * @returns {Promise<import('baileys').proto.IWebMessageInfo>}
   */
   async sendMessage(jid, content, options) {
     try {
@@ -719,6 +720,7 @@ export class Handler {
    * @param {string} jid
    * @param {import('baileys').proto.IMessage} content
    * @param {import('baileys').MessageGenerationOptions} options
+   * @returns {Promise<string>}
    */
   async relayMessage(jid, content, options) {
     try {
@@ -741,6 +743,7 @@ export class Handler {
         }
       }
 
+      this.pen.Debug(content);
       return await this.client.sock.relayMessage(jid, content, options);
     } catch (e) {
       this.pen.Error(e);

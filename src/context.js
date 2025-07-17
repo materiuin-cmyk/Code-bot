@@ -92,7 +92,7 @@ export class Ctx {
     /** 
      * @param {import('baileys').AnyMessageContent} content
      * @param {import('baileys').MiscMessageGenerationOptions} options 
-     * @returns {import('baileys').WAMessage}
+     * @returns {Promise<import('baileys').proto.IWebMessageInfo>}
      */
     this.reply = async (content, options) => {
       if (!this.chat) throw new Error('chat jid not provided');
@@ -102,7 +102,7 @@ export class Ctx {
     /**
      * @param {import('baileys').AnyMessageContent} content
      * @param {import('baileys').MiscMessageGenerationOptions} options
-     * @returns {import('baileys').WAMessage} 
+     * @returns {Promise<string>} 
      */
     this.replyRelay = async (content, options) => {
       if (!this.chat) throw new Error('chat jid not provided');
@@ -112,7 +112,7 @@ export class Ctx {
     /**
      * @param {string} emoji - Emoji to react with
      * @param {import('baileys').WAMessageKey} key - Message key to react to
-     * @returns {import('baileys').WAMessage}
+     * @returns {Promise<import('baileys').proto.IWebMessageInfo>}
      */
     this.react = async (emoji, key) => await handler.sendMessage(this.chat, { react: { text: emoji, key: key, } });
 
@@ -323,6 +323,7 @@ export class Ctx {
      * @param {import('baileys').WAMessage} m
      * @param {'buffer' | 'stream'} output
      * @param {import('baileys').DownloadMediaOptions} options
+     * @returns {Promise<import('fs').ReadStream | Buffer>}
      */
     this.downloadIt = async (m, output, options) => {
       if (!output || typeof output !== 'string' || output.length === 0) output = 'buffer';
@@ -334,6 +335,7 @@ export class Ctx {
     /**
     * @param {'buffer' | 'stream'} output
     * @param {import('baileys').DownloadMediaOptions} options
+    * @returns {Promise<import('fs').ReadStream | Buffer>}
     */
     this.download = async (output, options) => {
       return this.downloadIt({ message: this.message }, output, options)
@@ -342,6 +344,7 @@ export class Ctx {
     /**
      * @param {'buffer' | 'stream'} output
      * @param {import('baileys').DownloadMediaOptions} options
+     * @returns {Promise<import('fs').ReadStream | Buffer>}
      */
     this.downloadQuoted = async (output, options) => {
       if (!this.quotedMessage) return;
