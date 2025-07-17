@@ -14,7 +14,6 @@ import pen from '../../../src/pen.js';
 import { StoreJson } from '../../../src/store.js';
 import { getFile } from '../../../src/data.js';
 import { extractTextContext } from '../../../src/context.js';
-import { downloadMediaMessage } from 'baileys';
 import { formatMD } from '../../../src/tools.js';
 
 /** @type {import('./gemini.js').Gemini} */
@@ -83,12 +82,10 @@ async function processChat(c) {
       }
       case 'documentWithCaptionMessage': {
         m = m.documentWithCaptionMessage.message;
-        pen.Debug(m);
       }
       case 'documentMessage': {
         mtype = 'document';
         content = m.documentMessage;
-        pen.Debug(content);
         break;
       }
       case 'stickerMessage': {
@@ -99,7 +96,7 @@ async function processChat(c) {
     }
 
     let mimetype = content?.mimetype || 'unknown';
-    if (mimetype.startsWith('application/') && !mimetype.endsWith('pdf')) mimetype = 'text/plain';
+    if (mimetype?.startsWith('application/') && !mimetype?.endsWith('pdf')) mimetype = 'text/plain';
 
     const buff = await c.downloadIt({ message: m }, 'buffer', {});
     if (!buff) continue;
