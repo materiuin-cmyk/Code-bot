@@ -29,10 +29,7 @@ export default {
     if (!src) return;
 
     try {
-      let res = eval(src);
-      if (typeof res === 'object') {
-        res = JSON.stringify(res, null, 2);
-      }
+      let res = await eval(`(async () => { ${src} })()`);
       c.reply({ text: `${res}` });
     } catch (e) {
       c.reply({ text: `${e}` });
