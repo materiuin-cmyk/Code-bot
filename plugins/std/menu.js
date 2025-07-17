@@ -77,7 +77,7 @@ export default {
         for (const [_, patt] of cat.entries()) {
           if (patt.plugin.disabled) disabledCount++;
           texts.push(`  \`${patt.pre}\` ${patt.plugin.disabled ? '❗' : ''}`);
-          if (c.argv?.desc) texts.push(`    > _${patt.plugin.desc?.trim()}_`);
+          if (c.argv?.desc) texts.push(`    _${patt.plugin.desc?.trim()}_`);
         }
       }
     }
