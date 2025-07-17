@@ -8,9 +8,14 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
-import { StoreJson } from '../src/store.js';
+import { StoreJson, StoreSQLite } from '../src/store.js';
 import { getFile } from '../src/data.js';
 import { Reason } from '../src/reason.js';
+
+export const storeMsg = new StoreSQLite({
+  saveName: getFile('store_message.db'),
+});
+
 
 export const settings = new StoreJson({
   saveName: getFile('settings.json'),
