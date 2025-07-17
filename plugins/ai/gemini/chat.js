@@ -56,7 +56,7 @@ async function processChat(c) {
   if (query || query.length > 0) parts.push({ text: query });
 
   const msgs = [c.message, c.quotedMessage];
-  for (const m of msgs) {
+  for (let m of msgs) {
     const ext = extractTextContext(m);
 
     if (!m || !ext) continue;
@@ -81,10 +81,14 @@ async function processChat(c) {
         content = m.videoMessage;
         break;
       }
-      case 'documentWithCaptionMessage':
+      case 'documentWithCaptionMessage': {
+        m = m.documentWithCaptionMessage.message;
+        pen.Debug(m);
+      }
       case 'documentMessage': {
         mtype = 'document';
         content = m.documentMessage;
+        pen.Debug(content);
         break;
       }
       case 'stickerMessage': {
@@ -94,9 +98,10 @@ async function processChat(c) {
       }
     }
 
-    const mimetype = content?.mimetype || 'unknown';
+    let mimetype = content?.mimetype || 'unknown';
+    if (mimetype.startsWith('application/') && !mimetype.endsWith('pdf')) mimetype = 'text/plain';
 
-    const buff = await downloadMediaMessage({ message: m }, 'buffer', {});
+    const buff = await c.downloadIt({ message: m }, 'buffer', {});
     if (!buff) continue;
 
     parts.push({
