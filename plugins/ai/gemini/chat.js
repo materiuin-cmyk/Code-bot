@@ -31,6 +31,7 @@ const contentSupport = [
   'videoMessage',
   'documentMessage',
   'stickerMessage',
+  'documentWithCaption',
 ];
 
 /**
