@@ -12,7 +12,7 @@ import { MESSAGES_UPSERT } from '../../src/const.js';
 import { eventNameIs, fromMe, midwareAnd, midwareOr } from '../../src/midware.js';
 import { execSync } from 'child_process';
 import { fromOwner } from '../settings.js';
-import { unlinkSync } from 'fs';
+import { existsSync, unlinkSync } from 'fs';
 
 /** @type {import('../../src/plugin.js').Plugin} */
 export default {
@@ -31,14 +31,14 @@ export default {
   exec: async (c) => {
     /* waiting */
     await c.react('⌛');
-    const src = 'git fetch ; git pull ' + c.argv?._ ? c.argv?._?.join(' ') : '';
+    const src = 'git fetch ; git pull ';
     try {
       if (c.argv?.l || c.argv?.lock) {
         await c.react('🔒');
         const lockFiles = ['.git/HEAD.lock', '.git/refs/heads/main.lock'];
         for (const lf of lockFiles) {
           /* Remove lock files */
-          unlinkSync(lf);
+          if (existsSync(lf)) unlinkSync(lf);
         }
       }
 
