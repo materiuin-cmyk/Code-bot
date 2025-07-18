@@ -719,7 +719,7 @@ export class Handler {
    * Relay message to given jid
    * @param {string} jid
    * @param {import('baileys').proto.IMessage} content
-   * @param {import('baileys').MessageGenerationOptions} options
+   * @param {import('baileys').MessageRelayOptions} options
    * @returns {Promise<string>}
    */
   async relayMessage(jid, content, options) {
@@ -738,6 +738,14 @@ export class Handler {
               content[key].contextInfo = { expiration: ephemeral };
             } else {
               content[key].contextInfo.expiration = ephemeral;
+            }
+          }
+        }
+        if (content?.conversation && ephemeral > 0) {
+          content = {
+            extendedTextMessage: {
+              text: content.conversation,
+              contextInfo: { expiration: ephemeral }
             }
           }
         }
