@@ -31,7 +31,7 @@ export default {
   exec: async (c) => {
     /* waiting */
     await c.react('⌛');
-    const src = 'git fetch ; git pull ' + c.argv?._?.join(' ');
+    const src = 'git fetch ; git pull ' + c.argv?._ ? c.argv?._?.join(' ') : '';
     try {
       if (c.argv?.l || c.argv?.lock) {
         await c.react('🔒');
