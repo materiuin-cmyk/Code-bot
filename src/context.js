@@ -81,7 +81,7 @@ export class Ctx {
 
     /**
      * @param {import('baileys').AnyMessageContent} content
-     * @param {import('baileys').MiscMessageGenerationOptions} options 
+     * @param {import('baileys').MessageGenerationOptions} options 
      * @returns {import('baileys').WAMessage} 
      * */
     this.sendMessage = async (jid, content, options) => handler?.sendMessage(jid, content, options);
@@ -91,7 +91,7 @@ export class Ctx {
 
     /** 
      * @param {import('baileys').AnyMessageContent} content
-     * @param {import('baileys').MiscMessageGenerationOptions} options 
+     * @param {import('baileys').MessageGenerationOptions} options 
      * @returns {Promise<import('baileys').proto.IWebMessageInfo>}
      */
     this.reply = async (content, options) => {
@@ -110,11 +110,20 @@ export class Ctx {
     };
 
     /**
+     * @param {string} jid - JID to download media from
+     * @param {string} emoji - Emoji to react with
+     * @param {import('baileys').WAMessageKey} key - Message key to react to
+     * @param {import('baileys').MessageGenerationOptions} options - Message options
+     * @returns {Promise<import('baileys').proto.IWebMessageInfo>}
+     */
+    this.reactIt = async (jid, emoji, key, options) => await handler.sendMessage(jid, { react: { text: emoji, key: key } }, options);
+
+    /**
      * @param {string} emoji - Emoji to react with
      * @param {import('baileys').WAMessageKey} key - Message key to react to
      * @returns {Promise<import('baileys').proto.IWebMessageInfo>}
      */
-    this.react = async (emoji, key) => await handler.sendMessage(this.chat, { react: { text: emoji, key: key, } });
+    this.react = async (emoji, key) => await this.reactIt(this.chat, emoji, key ?? this.key);
 
     /**
      * @param {string} text - Text to parse
