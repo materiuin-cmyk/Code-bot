@@ -12,6 +12,7 @@ import { MESSAGES_UPSERT } from '../../src/const.js';
 import { eventNameIs, fromMe, midwareAnd, midwareOr } from '../../src/midware.js';
 import { execSync } from 'child_process';
 import { fromOwner } from '../settings.js';
+import { unlinkSync } from 'fs';
 
 /** @type {import('../../src/plugin.js').Plugin} */
 export default {
@@ -30,18 +31,20 @@ export default {
   exec: async (c) => {
     /* waiting */
     await c.react('⌛');
-    const src = 'git fetch ; git pull ' + c.args;
+    const src = 'git fetch ; git pull ' + c.argv?._;
     try {
+      if (c.argv?.l || c.argv?.lock) {
+        await c.react('🔒');
+        const lockFiles = ['.git/HEAD.lock', '.git/refs/heads/main.lock'];
+        for (const lf of lockFiles) {
+          /* Remove lock files */
+          unlinkSync(lf);
+        }
+      }
+
       /* Execute shell command */
       let stdout = execSync(src);
       stdout = stdout?.toString();
-
-      if (stdout?.indexOf('.lock') > -1) {
-        await c.react('🔒');
-        stdout += '\n\nRemoving lock files...\n\n' + execSync('rm -f .git/HEAD.lock ; rm -f .git/refs/main.lock')?.toString();
-        await c.react('🔓')
-        stdout += '\n\nRetry\n\n' + execSync(src)?.toString();
-      }
 
       if (stdout && stdout?.length > 0) {
         c.reply({ text: `${stdout.toString()}`.trim() });
