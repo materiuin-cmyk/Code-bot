@@ -69,6 +69,7 @@ const listDetectors = [
       data: c.contextInfo,
     };
   },
+  /*
   (c) => {
     const key = `${c.chat}|${c.sender}|${c.timestamp}`;
     return {
@@ -77,6 +78,7 @@ const listDetectors = [
       data: c,
     }
   }
+  */
 ];
 
 
