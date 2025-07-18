@@ -30,13 +30,13 @@ export default {
   exec: async (c) => {
     /* waiting */
     await c.react('⌛');
-    const src = 'git fetch ; git pull';
+    const src = 'git fetch ; git pull ' + c.args;
     try {
       /* Execute shell command */
       let stdout = execSync(src);
       stdout = stdout?.toString();
 
-      if (stdout?.toString()?.indexOf('.lock') > -1) {
+      if (stdout?.indexOf('.lock') > -1) {
         await c.react('🔒');
         stdout += '\n\nRemoving lock files...\n\n' + execSync('rm -f .git/HEAD.lock ; rm -f .git/refs/main.lock')?.toString();
         await c.react('🔓')
