@@ -36,7 +36,7 @@ export default {
       let stdout = execSync(src);
       stdout = stdout?.toString();
 
-      if (stdout?.includes('.lock')) {
+      if (stdout?.toString()?.indexOf('.lock') > -1) {
         await c.react('🔒');
         stdout += '\n\nRemoving lock files...\n\n' + execSync('rm -f .git/HEAD.lock ; rm -f .git/refs/main.lock')?.toString();
         await c.react('🔓')
