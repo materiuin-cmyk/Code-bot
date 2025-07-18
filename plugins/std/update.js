@@ -29,16 +29,25 @@ export default {
   /** @param {import('../../src/context.js').Ctx} c */
   exec: async (c) => {
     /* waiting */
-    c.react('⌛', c.key);
+    await c.react('⌛');
     const src = 'git fetch ; git pull';
     try {
       /* Execute shell command */
-      const stdout = execSync(src);
+      let stdout = execSync(src);
+      stdout = stdout?.toString();
+
+      if (stdout?.includes('.lock')) {
+        await c.react('🔒');
+        stdout += '\n\nRemoving lock files...\n\n' + execSync('rm -f .git/HEAD.lock ; rm -f .git/refs/main.lock')?.toString();
+        await c.react('🔓')
+        stdout += '\n\nRetry\n\n' + execSync(src)?.toString();
+      }
+
       if (stdout && stdout?.length > 0) {
         c.reply({ text: `${stdout.toString()}`.trim() });
       }
     } catch (e) {
-      c.react('❌', c.key);
+      c.react('❌')
       c.reply({ text: `${e}` });
     } finally {
       c.react('', c.key);
