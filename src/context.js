@@ -101,7 +101,7 @@ export class Ctx {
 
     /**
      * @param {import('baileys').AnyMessageContent} content
-     * @param {import('baileys').MiscMessageGenerationOptions} options
+     * @param {import('baileys').MessageRelayOptions} options
      * @returns {Promise<string>} 
      */
     this.replyRelay = async (content, options) => {
