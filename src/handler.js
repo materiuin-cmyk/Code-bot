@@ -18,7 +18,6 @@ import { Events } from './const.js';
 import { jidNormalizedUser } from 'baileys';
 import { genHEX, hashCRC32, shouldUsePolling } from './tools.js';
 import * as chokidar from 'chokidar';
-import { WA_DEFAULT_EPHEMERAL } from 'baileys';
 import { Reason } from './reason.js';
 
 /**
