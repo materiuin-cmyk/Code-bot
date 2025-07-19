@@ -9,7 +9,7 @@
  */
 
 import { downloadMediaMessage, jidNormalizedUser } from 'baileys';
-import { CALL, CONTACTS_UPDATE, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, PRESENCE_UPDATE } from './const.js';
+import { Events } from './const.js';
 import minimist from 'minimist';
 import parseArgsStringToArgv from 'string-argv';
 
@@ -172,7 +172,7 @@ export class Ctx {
     /** @type {string} */
     this.meLID = jidNormalizedUser(handler?.client?.sock?.user?.lid);
 
-    if (eventName === GROUPS_UPDATE) {
+    if (eventName === Events.GROUPS_UPDATE) {
       /** @type {string} */
       this.chat = event.id;
 
@@ -180,7 +180,7 @@ export class Ctx {
       this.sender = event.author;
     }
 
-    if (eventName === GROUP_PARTICIAPANTS_UPDATE) {
+    if (eventName === Events.GROUP_PARTICIPANTS_UPDATE) {
       this.chat = event.id;
       this.sender = event.author;
 
@@ -191,14 +191,14 @@ export class Ctx {
       this.action = event.action;
     }
 
-    if (eventName === CONTACTS_UPDATE) {
+    if (eventName === Events.CONTACTS_UPDATE) {
       this.sender = event.id;
 
       /** @type {string} */
       this.pushName = event.notify;
     }
 
-    if (eventName === PRESENCE_UPDATE) {
+    if (eventName === Events.PRESENCE_UPDATE) {
       this.chat = event.id;
       for (const jid of Object.keys(event.presences)) {
         this.sender = jid;
@@ -270,7 +270,7 @@ export class Ctx {
       this.participant = event.reaction.key?.participant;
     }
 
-    if (eventName === CALL) {
+    if (eventName === Events.CALL) {
       this.chat = event.groupJid ?? event.chatId;
       this.sender = jidNormalizedUser(event.from);
       this.id = event.id;

@@ -143,5 +143,6 @@ export class Pen {
   }
 }
 
+export const pen = new Pen({ format: 'HH:mm:ss' });
 
-export default new Pen({ format: 'HH:mm:ss' });
+export default pen;

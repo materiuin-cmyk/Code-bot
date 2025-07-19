@@ -11,10 +11,42 @@
 import { Reason } from './reason.js';
 
 /**
+ * @readonly
+ * @enum {number | string | any}
+ */
+export const Role = {
+  GUEST: 0,
+  USER: 1,
+  PREMIUM: 2,
+  ADMIN: 3,
+  OWNER: 4,
+}
+
+/**
+ * @typedef {Object} Plugin
+ * @property {import('./handler.js').Handler} handler
+ * @property {import('baileys').WASocket} sock
+ * @property {string | string[]} cmd
+ * @property {string} desc
+ * @property {string[]} tags
+ * @property {string} cat
+ * @property {boolean} disabled
+ * @property {boolean} hidden
+ * @property {Role | any} role
+ * @property {number} timeout
+ * @property {boolean} noPrefix
+ * @property {(ctx: import('./context.js').Ctx) => Promise<Reason> | Reason} midware
+ * @property {(ctx: import('./context.js').Ctx) => Promise<void>} exec
+ * @property {(ctx: import('./context.js').Ctx, reason: Reason) => Promise<void>} final
+ * @property {string} location
+ */
+
+/**
  * Plugin class for handling event as listener or command
  */
 export class Plugin {
-  constructor({ cmd, desc, cat, tags, disabled, hidden, timeout, noPrefix, midware, exec, final, location }) {
+  /** @param {Plugin} */
+  constructor({ cmd, desc, cat, tags, disabled, hidden, role, timeout, noPrefix, midware, exec, final, location }) {
     /** @type {import('./handler.js').Handler} */
     this.handler = null;
 
@@ -38,6 +70,9 @@ export class Plugin {
 
     /** @type {boolean} */
     this.hidden = hidden;
+
+    /** @type {Role | any} */
+    this.role = role;
 
     /**
      * Timeout in second

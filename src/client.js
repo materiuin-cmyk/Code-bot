@@ -13,7 +13,7 @@ import readline from "node:readline";
 import pino from "pino";
 import QRCode from "qrcode";
 import { Pen } from "./pen.js";
-import { CONNECTION_UPDATE, CREDS_UPDATE } from "./const.js";
+import { Events } from "./const.js";
 import { useSQLite } from "./auth_sqlite.js";
 import { useMongoDB } from "./auth_mongo.js";
 import { usePostgres } from "./auth_postgres.js";
@@ -152,7 +152,7 @@ export class Wangsaf {
     this.sock = makeWASocket(socketOptions)
     if (this.handler) {
       if (this.handler.attach) {
-        this.handler.attach(this);
+        await this.handler.attach(this);
       }
     }
 
@@ -181,7 +181,7 @@ export class Wangsaf {
       if (code) this.pen.Log('Enter this OTP :', code)
     }
 
-    this.sock.ev.on(CONNECTION_UPDATE, async (update) => {
+    this.sock.ev.on(Events.CONNECTION_UPDATE, async (update) => {
       const { connection, lastDisconnect, qr } = update;
       if (qr && this.method == 'qr') {
         this.pen.Log('Scan this QR :\n', await QRCode.toString(qr, { type: 'terminal', small: true }))
@@ -192,14 +192,14 @@ export class Wangsaf {
         const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
         if (shouldReconnect) {
           if (this.retry) {
-            this.pen.Debug(CONNECTION_UPDATE, `Reconnecting...`);
+            this.pen.Debug(Events.CONNECTION_UPDATE, `Reconnecting...`);
             await delay(3000);
             this.connect();
           } else {
-            this.pen.Error(CONNECTION_UPDATE, 'Not retrying.');
+            this.pen.Error(Events.CONNECTION_UPDATE, 'Not retrying.');
           }
         } else if (statusCode === DisconnectReason.loggedOut) {
-          this.pen.Debug(CONNECTION_UPDATE, 'Logged out, closing connection');
+          this.pen.Debug(Events.CONNECTION_UPDATE, 'Logged out, closing connection');
           try {
             switch (type) {
               case "folder": {
@@ -223,10 +223,10 @@ export class Wangsaf {
           }
         }
       } else if (connection === 'open') {
-        this.pen.Debug(CONNECTION_UPDATE, 'Client connected');
+        this.pen.Debug(Events.CONNECTION_UPDATE, 'Client connected');
       }
     });
 
-    this.sock.ev.on(CREDS_UPDATE, saveCreds);
+    this.sock.ev.on(Events.CREDS_UPDATE, saveCreds);
   }
 }

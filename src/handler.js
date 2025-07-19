@@ -14,7 +14,7 @@ import { platform } from 'os';
 import { pathToFileURL } from 'url';
 import { Plugin } from './plugin.js';
 import { Pen } from './pen.js';
-import { CALL, CONTACTS_UPDATE, CONTACTS_UPSERT, GROUP_PARTICIAPANTS_UPDATE, GROUPS_UPDATE, GROUPS_UPSERT, MESSAGES_REACTION, MESSAGES_UPDATE, MESSAGES_UPSERT, PRESENCE_UPDATE } from './const.js';
+import { Events } from './const.js';
 import { jidNormalizedUser } from 'baileys';
 import { genHEX, hashCRC32, shouldUsePolling } from './tools.js';
 import * as chokidar from 'chokidar';
@@ -22,9 +22,22 @@ import { WA_DEFAULT_EPHEMERAL } from 'baileys';
 import { Reason } from './reason.js';
 
 /**
+ * @typedef {Object} HandlerOptions
+ * @property {string} pluginDir
+ * @property {Function} filter
+ * @property {string[]} prefix
+ * @property {import('./pen.js').Pen} pen
+ * @property {Map<string, import('baileys').GroupMetadata>} groupCache
+ * @property {Map<string, import('baileys').Contact>} contactCache
+ * @property {Map<string, number>} timerCache
+ */
+/**
  * Handler class for handling plugins
  */
 export class Handler {
+  /**
+   * @param {HandlerOptions} 
+   */
   constructor({ pluginDir, filter, prefix, pen, groupCache, contactCache, timerCache }) {
     this.pluginDir = pluginDir ?? '../plugins';
 
@@ -37,8 +50,8 @@ export class Handler {
     /** @type {import('./pen.js').Pen)} */
     this.pen = pen ?? new Pen({ prefix: 'hand' });
 
-    /** @type {string} */
-    this.prefix = prefix ?? './';
+    /** @type {string[]} */
+    this.prefix = prefix ?? ['.', '/'];
 
     /** @type {Map<number, import('./plugin.js').Plugin>} */
     this.plugins = new Map();
@@ -87,7 +100,7 @@ export class Handler {
 
   /**
    * Set prefix for command plugins
-   * @param {string} prefix
+   * @param {string[]} prefix
    */
   setPrefix(prefix) {
     this.prefix = prefix;
@@ -117,8 +130,12 @@ export class Handler {
         if (plugin.noPrefix) {
           cmds.push(precmd);
         } else {
-          for (const pre of this.prefix) {
-            cmds.push(`${pre}${precmd}`);
+          if (this.prefix) {
+            for (const pre of this.prefix) {
+              cmds.push(`${pre}${precmd}`);
+            }
+          } else {
+            cmds.push(precmd);
           }
         }
       }
@@ -359,15 +376,15 @@ export class Handler {
           /* Check rules and midware before exec */
           const reason = await listen.check(ctx);
           if (!reason?.success) {
-            if (listen?.final) await listen.final(ctx, reason);
+            if (listen?.final) listen.final(ctx, reason);
             continue;
           }
 
           /* Exec */
-          if (listen.exec) await listen.exec(ctx);
+          if (listen.exec) listen.exec(ctx);
         } catch (e) {
           this.pen.Error(e);
-          if (listen?.final) await listen.final(ctx, new Reason({
+          if (listen?.final) listen.final(ctx, new Reason({
             success: false,
             code: 'handle-listen-error',
             author: import.meta.url,
@@ -391,15 +408,15 @@ export class Handler {
             /* Check rules and midware before exec */
             const reason = await plugin.check(ctx);
             if (!reason?.success) {
-              if (plugin?.final) await plugin.final(ctx, reason);
+              if (plugin?.final) plugin.final(ctx, reason);
               return;
             }
 
             /* Exec */
-            if (plugin.exec) await plugin.exec(ctx);
+            if (plugin.exec) plugin.exec(ctx);
           } catch (e) {
             this.pen.Error(e);
-            if (listen?.final) await plugin.final(ctx, new Reason({
+            if (plugin?.final) plugin.final(ctx, new Reason({
               success: false,
               code: 'handle-command-error',
               author: import.meta.url,
@@ -423,15 +440,15 @@ export class Handler {
     try {
 
       switch (ctx.eventName) {
-        case GROUPS_UPSERT:
-        case GROUP_PARTICIAPANTS_UPDATE:
-        case GROUPS_UPDATE: {
+        case Events.GROUPS_UPSERT:
+        case Events.GROUP_PARTICIPANTS_UPDATE:
+        case Events.GROUPS_UPDATE: {
           await this.updateGroupMetadata(ctx.chat, ctx);
           break;
         }
 
-        case CONTACTS_UPDATE:
-        case CONTACTS_UPSERT: {
+        case Events.CONTACTS_UPDATE:
+        case Events.CONTACTS_UPSERT: {
           this.updateContact(ctx.sender, {
             jid: ctx.sender,
             name: ctx.pushName,
@@ -439,15 +456,10 @@ export class Handler {
           break;
         }
 
-        case MESSAGES_UPSERT: {
+        case Events.MESSAGES_UPSERT: {
           if (ctx?.fromMe && ctx?.eventType !== 'append' && ctx?.type !== 'senderKeyDistributionMessage') {
             this.updateTimer(ctx.chat, ctx.expiration, ctx.eventName);
           }
-          break;
-        }
-
-        case WA_DEFAULT_EPHEMERAL: {
-          this.pen.Debug(WA_DEFAULT_EPHEMERAL, ctx.event);
           break;
         }
       }
@@ -469,34 +481,29 @@ export class Handler {
       for (const eventName of Object.keys(events)) {
         const update = events[eventName];
         switch (eventName) {
-          case MESSAGES_UPSERT: {
+          case Events.MESSAGES_UPSERT: {
             for (const event of update?.messages) {
               this.handle({ eventName: eventName, event: event, eventType: update.type });
             }
             break;
           }
 
-          case CALL:
-          case MESSAGES_REACTION:
-          case MESSAGES_UPDATE:
-          case CONTACTS_UPDATE:
-          case CONTACTS_UPSERT:
-          case GROUPS_UPSERT:
-          case GROUPS_UPDATE: {
+          case Events.CALL:
+          case Events.MESSAGES_REACTION:
+          case Events.MESSAGES_UPDATE:
+          case Events.CONTACTS_UPDATE:
+          case Events.CONTACTS_UPSERT:
+          case Events.GROUPS_UPSERT:
+          case Events.GROUPS_UPDATE: {
             for (const event of update) {
               this.handle({ eventName: eventName, event: event, eventType: update.type });
             }
             break;
           }
 
-          case GROUP_PARTICIAPANTS_UPDATE:
-          case PRESENCE_UPDATE: {
+          case Events.GROUP_PARTICIPANTS_UPDATE:
+          case Events.PRESENCE_UPDATE: {
             this.handle({ eventName: eventName, event: update, eventType: update.type });
-            break;
-          }
-
-          case WA_DEFAULT_EPHEMERAL: {
-            this.pen.Debug(WA_DEFAULT_EPHEMERAL, update);
             break;
           }
 
@@ -528,7 +535,7 @@ export class Handler {
       if (data) {
 
         switch (ctx?.eventName) {
-          case GROUP_PARTICIAPANTS_UPDATE: {
+          case Events.GROUP_PARTICIPANTS_UPDATE: {
             switch (ctx?.action) {
               case 'add': {
                 for (const add of ctx.mentionedJid) {
@@ -575,7 +582,7 @@ export class Handler {
             }
             break;
           }
-          case GROUPS_UPDATE: {
+          case Events.GROUPS_UPDATE: {
             const skip = ['author', 'id'];
             for (const key in ctx?.event) {
               if (skip.includes(key)) continue;

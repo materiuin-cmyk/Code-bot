@@ -30,15 +30,15 @@ export default {
 
   /** @param {import('../../src/context.js').Ctx} c */
   exec: async (c) => {
-    c.react('🔍', c.key);
+    await c.react('🔍');
     const query = c.argv?._?.join(' ');
     if (!query) {
-      return c.react('❓', c.key);
+      return c.react('❓');
     }
 
     const apiKey = process.env.GOOGLE_API_KEY ?? process.env.YOUTUBE_API_KEY ?? process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      return c.react('🔑', c.key);
+      return c.react('🔑');
     }
 
     try {
@@ -51,7 +51,7 @@ export default {
       });
 
       if (!searchRes.data.items || searchRes.data.items.length === 0) {
-        return c.react('❓', c.key);
+        return await c.react('❓');
       }
 
       const video = searchRes.data.items[0];
@@ -69,7 +69,7 @@ export default {
         const downloadRes = await axios.get(downloaderApiUrl);
 
         if (downloadRes.data.status !== 200) {
-          return c.react('❌', c.key);
+          return c.react('🔥');
         }
 
         const result = downloadRes.data.result;
@@ -77,7 +77,7 @@ export default {
         const audioResponse = await axios.get(audioUrl, { responseType: 'arraybuffer' });
 
         const mimetype = audioResponse.headers['content-type'];
-        if (!audioResponse || !mimetype?.startsWith('audio/')) return c.react('⁉️', c.key);
+        if (!audioResponse || !mimetype?.startsWith('audio/')) return c.react('⁉️');
 
         const fileExtension = mimetype.split('/')[1] || 'mp3';
 
@@ -115,14 +115,13 @@ export default {
             }
           }
         });
-
-        storeMsg.set(video.id.videoId, resp);
+        if (resp) storeMsg.set(video.id.videoId, resp);
       }
     } catch (e) {
       pen.Error(e);
-      c.react('❌', c.key);
+      c.react('❌');
     } finally {
-      c.react('', c.key);
+      c.react('');
     }
   }
 };

@@ -8,7 +8,7 @@
  * This code is part of Ginko project (https://github.com/ginkohub)
  */
 
-import { CALL, CHATS_UPDATE, CHATS_UPSERT, CONNECTION_UPDATE, CONTACTS_UPDATE, CREDS_UPDATE, GROUP_PARTICIAPANTS_UPDATE, MESSAGE_RECEIPT_UPDATE, MESSAGES_REACTION, MESSAGES_UPSERT, PRESENCE_UPDATE } from '../../src/const.js';
+import { Events } from '../../src/const.js';
 import { BotDetector } from '../../src/detector.js';
 import pen from '../../src/pen.js';
 import { formatElapse } from '../../src/tools.js';
@@ -53,12 +53,12 @@ const cleanName = (str) => {
 }
 
 const skipEvents = [
-  MESSAGE_RECEIPT_UPDATE,
-  CONNECTION_UPDATE,
-  CONTACTS_UPDATE,
-  CREDS_UPDATE,
-  CHATS_UPDATE,
-  CHATS_UPSERT,
+  Events.MESSAGE_RECEIPT_UPDATE,
+  Events.CONNECTION_UPDATE,
+  Events.CONTACTS_UPDATE,
+  Events.CREDS_UPDATE,
+  Events.CHATS_UPDATE,
+  Events.CHATS_UPSERT,
 ];
 
 /** @type {import('../../src/plugin.js').Plugin} */
@@ -87,7 +87,7 @@ export default {
     }
 
     switch (c.eventName) {
-      case PRESENCE_UPDATE: {
+      case Events.PRESENCE_UPDATE: {
         switch (c.presence) {
           case 'composing': {
             data.push('✍️', '');
@@ -110,8 +110,8 @@ export default {
         break;
       }
 
-      case MESSAGES_REACTION:
-      case MESSAGES_UPSERT: {
+      case Events.MESSAGES_REACTION:
+      case Events.MESSAGES_UPSERT: {
 
         /* Indicator section */
         if (c.isAdmin) data.push('🛡️', '');
@@ -148,7 +148,7 @@ export default {
         break;
       }
 
-      case GROUP_PARTICIAPANTS_UPDATE: {
+      case Events.GROUP_PARTICIPANTS_UPDATE: {
         data.push('👥');
 
         switch (c.action) {
@@ -181,7 +181,7 @@ export default {
         break;
       }
 
-      case CALL: {
+      case Events.CALL: {
         data.push('📞', c.callStatus, 'from', pen.Blue(chatName));
         break
       }

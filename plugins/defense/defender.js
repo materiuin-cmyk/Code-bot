@@ -11,7 +11,7 @@
 import { MESSAGES_UPSERT } from '../../src/const.js';
 import { eventNameIs, fromMe, midwareAnd, midwareOr } from '../../src/midware.js';
 import pen from '../../src/pen.js';
-import { settings } from '../settings.js';
+import { fromOwner, settings } from '../settings.js';
 
 const allowed = [
   'extendedTextMessage',
@@ -57,8 +57,19 @@ const hitman = new HitGen(5);
 /** @type {Detector[]} */
 const listDetectors = [
   (c) => {
+
+    if (!c.isStatus || !c.type) return {
+      suspect: false,
+      reason: 'Not a status message',
+    }
+
+    let allow = settings.get('defense_allow_status');
+    if (!allow) allow = [];
+    allow.push(...allowed);
+    allow = allow.filter((v, i, a) => a.indexOf(v) === i);
+
     return {
-      suspect: c.isStatus && !allowed.includes(c.type) && c.type,
+      suspect: c.isStatus && !allow?.includes(c.type) && c.type,
       reason: 'Status message with not allowed type',
       data: c,
     };
@@ -183,6 +194,62 @@ export default [
       }
       c.reply({ text: text + `\n\nNB :\n  *${pattern}-* _to deactivating_\n  *${pattern}+* _to activating_` }, { qouted: c.message })
     }
+  },
+
+  {
+    cmd: ['skip', 'skip+', 'skip-'],
+    cat: 'defense',
+    desc: 'Manage skip message type on status.',
+    timeout: 15,
+
+    midware: midwareAnd(
+      eventNameIs(MESSAGES_UPSERT),
+      midwareOr(fromMe, fromOwner),
+    ),
+
+    /** @param {import('../../src/context.js').Ctx} c */
+    exec: async (c) => {
+      let newAllowed = c.argv?._;
+      if (!newAllowed) newAllowed = [];
+      newAllowed = newAllowed.filter((v, i, a) => a.indexOf(v) === i);
+
+      const key = `defense_allow_status`;
+      let allow = settings.get(key);
+      if (!allow) allow = [];
+
+      let pattern = c.pattern;
+      let status = '';
+      if (c.pattern.endsWith('+')) {
+        pattern = c.pattern.slice(0, -1);
+        allow.push(...newAllowed.filter((v) => !allow.includes(v)));
+        status = 'added';
+      } else if (c.pattern.endsWith('-')) {
+        pattern = c.pattern.slice(0, -1);
+        allow = allow.filter((v) => !newAllowed.includes(v))
+        status = 'removed';
+      }
+
+      if (status.length > 0) settings.set(key, allow);
+
+      let text = '';
+      if (status.length > 0 && newAllowed?.length > 0) {
+        text = `List type that has *${status}* :\n` +
+          newAllowed.map((v) => `  - *${v}*`).join('\n') +
+          `\n\nDefault :\n` + allowed.map((v) => `  - \`${v}\``).join('\n');
+      } else {
+        text = `Currrent list type registered :\n` +
+          allow.map((v) => `  - \`${v}\``).join('\n') +
+          `\n\nDefault :\n` + allowed.map((v) => `  - \`${v}\``).join('\n');
+      }
+      if (text.length === 0) return await c.react('🤔');
+      c.reply({
+        text: text +
+          `\n\nNB :\n  *${pattern}-* _to remove_\n  *${pattern}+* _to add_` +
+          `\n\n_Split multiple type with space_` +
+          `\n\n_example :_\n\`${pattern}+ audioMessage imageMessage\``,
+      }, { quoted: c.event })
+    }
   }
+
 ]
 
