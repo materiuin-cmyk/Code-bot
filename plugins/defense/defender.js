@@ -19,7 +19,8 @@ const allowed = [
   'imageMessage',
   'audioMessage',
   'protocolMessage',
-  'senderKeyDistributionMessage'
+  'senderKeyDistributionMessage',
+  'associatedChildMessage',
 ]
 
 let blockedUsers = [];
