@@ -42,16 +42,34 @@ export default {
 
     const prefix = c.pattern[0];
     const texts = [];
+    const withDesc = c.argv?.desc || c.argv?.d;
 
-    if (c.args?.length > 0 && !c.argv?.desc) {
-      for (const cmd of c.args.split(' ')) {
-        const p = c.handler()?.getCMD(cmd);
-        if (!p) {
-          texts.push(`\`${cmd}\` not found`, '');
-          continue;
-        }
+    if (c.args?.length > 0 && !withDesc) {
+      /** @type {Map<string, import('../../src/plugin.js').Plugin>} */
+      const plugins = new Map();
+      const userKeys = c.args?.toLowerCase().split(' ');
+
+      if (userKeys) {
+
+        c.handler()?.plugins?.forEach((p, k) => {
+          if (!p?.cmd) return;
+
+          if (Array.isArray(p?.cmd)) {
+            p.cmd.forEach((x) => {
+              if (userKeys.includes(x.toLowerCase())) plugins.set(k, p);
+            });
+          } else if (typeof p.cmd === 'string') {
+            if (userKeys.includes(p?.cmd?.toLowerCase())) plugins.set(k, p);
+          }
+        });
+      } else {
+        texts.push('No command found :', c.args);
+      }
+
+
+      for (const [k, p] of plugins?.entries()) {
         texts.push(
-          `Detail of \`${cmd}\``,
+          `Detail of \`${k}\``,
           `- Cmds : ${Array.isArray(p.cmd) ? p.cmd?.map((c) => `\`${prefix + c}\``).join(', ') : `\`${prefix + p.cmd}\``}`,
           `- NoPrefix : ${p.noPrefix ? '✅' : '❌'}`,
           `- Hidden : ${p.hidden ? '✅' : '❌'}`,
@@ -73,17 +91,17 @@ export default {
 
       const categories = new Map();
       let cmdCount = 0;
-      for (const cid of c.handler()?.cmds?.values()) {
-        const p = c.handler()?.plugins?.get(cid);
+      for (const dataCMD of c.handler()?.cmds?.values()) {
+        const p = c.handler()?.plugins?.get(dataCMD?.id);
         if (!p || p?.hidden) continue;
         if (!categories.has(p.cat)) categories.set(p.cat, new Map());
 
         const cat = categories.get(p.cat);
-        if (cat.has(cid)) continue;
+        if (cat.has(dataCMD?.id)) continue;
 
         const patt = Array.isArray(p.cmd) ? p.cmd[0] : p.cmd;
 
-        cat.set(cid, {
+        cat.set(dataCMD?.id, {
           pre: `${p.noPrefix ? patt : prefix + patt}`,
           plugin: p
         });
@@ -100,7 +118,7 @@ export default {
           for (const [_, patt] of cat.entries()) {
             if (patt.plugin.disabled) disabledCount++;
             texts.push(`  \`${patt.pre}\` ${patt.plugin.disabled ? '❗' : ''}`);
-            if (c.argv?.desc) texts.push(`    _${patt.plugin.desc?.trim()}_`);
+            if (withDesc) texts.push(`    _${patt.plugin.desc?.trim()}_`);
           }
         }
       }
