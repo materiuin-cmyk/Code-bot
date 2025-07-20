@@ -17,7 +17,7 @@ import { Reason } from './reason.js';
  * @description A list of message types that are often associated with unofficial or modified WhatsApp clients.
  */
 const onlyOfficial = [
-  'buttonsMesage',
+  'buttonsMessage',
   'botInvokeMessage',
   'interactiveResponseMessage',
 ];

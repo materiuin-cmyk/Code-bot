@@ -73,6 +73,9 @@ export class Ctx {
     /** @type {import('./plugin.js').Plugin} */
     this.plugin = null;
 
+    /** @type {string} */
+    this.prefix = '';
+
     /** @returns {import('baileys').WASocket} */
     this.sock = () => handler?.client?.sock;
 
@@ -82,12 +85,12 @@ export class Ctx {
     /**
      * @param {import('baileys').AnyMessageContent} content
      * @param {import('baileys').MessageGenerationOptions} options 
-     * @returns {import('baileys').WAMessage} 
+     * @returns {Promise<import('baileys').proto.WebMessageInfo>} 
      * */
-    this.sendMessage = async (jid, content, options) => handler?.sendMessage(jid, content, options);
+    this.sendMessage = async (jid, content, options) => await handler?.sendMessage(jid, content, options);
 
-    /** @returns {import('baileys').WAMessage} */
-    this.relayMessage = async (jid, content, options) => handler?.relayMessage(jid, content, options);
+    /** @returns {Promise<string>} */
+    this.relayMessage = async (jid, content, options) => await handler?.relayMessage(jid, content, options);
 
     /** 
      * @param {import('baileys').AnyMessageContent} content
@@ -126,6 +129,12 @@ export class Ctx {
     this.react = async (emoji, key) => await this.reactIt(this.chat, emoji, key ?? this.key);
 
     /**
+     * @param {import('baileys').ChatModification} mods
+     * @param {string} jid
+     */
+    this.chatModify = async (mods, jid) => await this.sock()?.chatModify(mods, jid)
+
+    /**
      * @param {string} text - Text to parse
      */
     this.parseText = (text) => {
@@ -134,8 +143,11 @@ export class Ctx {
       /* Parsing cmd */
       if (text && text.length > 0) {
         const splitted = text.split(' ');
-        /** @type {string} */
+        /** @type {string} - With prefix */
         this.pattern = splitted[0];
+
+        /** @type {string} - No prefixed */
+        this.cmd = this.pattern?.slice(-(this.prefix?.length ?? 0));
 
         /** @type {string} */
         this.args = splitted.slice(1)?.join(' ');
@@ -222,7 +234,7 @@ export class Ctx {
     }
 
     if (event.message) {
-      /** @type {import('baileys').WAMessage} */
+      /** @type {import('baileys').proto.Message} */
       this.message = event.message;
       const ext = extractTextContext(event.message);
 

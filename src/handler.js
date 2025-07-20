@@ -55,7 +55,7 @@ export class Handler {
     /** @type {Map<number, import('./plugin.js').Plugin>} */
     this.plugins = new Map();
 
-    /** @type {Map<string, number>} */
+    /** @type {Map<string, {id: number, prefix: string, cmd: string}>} */
     this.cmds = new Map();
 
     /** @type {Map<number, number>} */
@@ -117,6 +117,7 @@ export class Handler {
    */
   genCMD(id, plugin) {
     if (plugin?.cmd) {
+      /** @type {string[]} */
       let precmds = [];
       if (Array.isArray(plugin.cmd)) {
         precmds = plugin.cmd;
@@ -124,23 +125,28 @@ export class Handler {
         precmds = [plugin.cmd];
       }
 
-      let cmds = [];
       for (const precmd of precmds) {
         if (plugin.noPrefix) {
-          cmds.push(precmd);
+          this.cmds?.set(precmd.toLowerCase(), {
+            id: id,
+            cmd: precmd.toLowerCase(),
+          });
         } else {
           if (this.prefix) {
             for (const pre of this.prefix) {
-              cmds.push(`${pre}${precmd}`);
+              this.cmds?.set(`${pre}${precmd.toLowerCase()}`, {
+                id: id,
+                prefix: pre,
+                cmd: precmd.toLowerCase(),
+              });
             }
           } else {
-            cmds.push(precmd);
+            this.cmds?.set(precmd.toLowerCase(), {
+              id: id,
+              cmd: precmd.toLowerCase(),
+            });
           }
         }
-      }
-
-      for (const cmd of cmds) {
-        this.cmds.set(cmd.toLowerCase(), id);
       }
     }
   }
@@ -193,7 +199,7 @@ export class Handler {
             }
           }
           for (const [id_cmd, val] of this.cmds) {
-            if (val.startsWith(hash)) {
+            if (val?.id?.startsWith(hash)) {
               this.cmds.delete(id_cmd);
             }
           }
@@ -301,13 +307,20 @@ export class Handler {
   /** 
    * Get command by pattern
    * @param {string} p
-   * @returns {import('./plugin.js').Plugin|undefined}
+   * @returns {{id: number, prefix: string, cmd: string, plugin:import('./plugin.js').Plugin}|undefined}
    */
   getCMD(p) {
     if (!p) return;
-    const cid = this.cmds.get(p.toLowerCase());
-    if (!cid) return;
-    return this.plugins.get(cid);
+    const data = this.cmds.get(p.toLowerCase());
+    if (!data) return;
+    const plugin = this.plugins.get(data.id);
+    if (!plugin) return;
+    return {
+      id: data.id,
+      prefix: data.prefix,
+      cmd: data.cmd,
+      plugin: plugin,
+    };
   }
 
   /** 
@@ -396,34 +409,34 @@ export class Handler {
 
       /* Handle commands */
       if (ctx?.pattern && this.isSafe(ctx)) {
-        const pid = this.cmds.get(ctx.pattern.toLowerCase());
-        if (!pid) return;
+        const data = this.getCMD(ctx.pattern.toLowerCase());
+        if (!data) return;
+
         /** @type {import('./plugin.js').Plugin} */
-        const plugin = this.plugins.get(pid);
-        if (plugin) {
-          try {
-            ctx.plugin = () => plugin;
+        try {
+          ctx.plugin = () => data.plugin;
+          ctx.prefix = data.prefix;
+          ctx.cmd = data.cmd
 
-            /* Check rules and midware before exec */
-            const reason = await plugin.check(ctx);
-            if (!reason?.success) {
-              if (plugin?.final) await plugin.final(ctx, reason);
-              return;
-            }
-
-            /* Exec */
-            if (plugin.exec) await plugin.exec(ctx);
-          } catch (e) {
-            this.pen.Error(e);
-            if (plugin?.final) await plugin.final(ctx, new Reason({
-              success: false,
-              code: 'handle-command-error',
-              author: import.meta.url,
-              message: e.message,
-            }));
-          } finally {
-            ctx.plugin = null;
+          /* Check rules and midware before exec */
+          const reason = await data?.plugin?.check(ctx);
+          if (!reason?.success) {
+            if (data?.plugin?.final) await data?.plugin.final(ctx, reason);
+            return;
           }
+
+          /* Exec */
+          if (data?.plugin?.exec) await data?.plugin?.exec(ctx);
+        } catch (e) {
+          this.pen.Error(e);
+          if (data?.plugin?.final) await data?.plugin?.final(ctx, new Reason({
+            success: false,
+            code: 'handle-command-error',
+            author: import.meta.url,
+            message: e.message,
+          }));
+        } finally {
+          ctx.plugin = null;
         }
       }
     } catch (e) {

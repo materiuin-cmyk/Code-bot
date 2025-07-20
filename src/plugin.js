@@ -27,6 +27,7 @@ export const Role = {
  * @property {import('./handler.js').Handler} handler
  * @property {import('baileys').WASocket} sock
  * @property {string | string[]} cmd
+ * @property {string} prefix
  * @property {string} desc
  * @property {string[]} tags
  * @property {string} cat
@@ -46,7 +47,7 @@ export const Role = {
  */
 export class Plugin {
   /** @param {Plugin} */
-  constructor({ cmd, desc, cat, tags, disabled, hidden, role, timeout, noPrefix, midware, exec, final, location }) {
+  constructor({ cmd, prefix, desc, cat, tags, disabled, hidden, role, timeout, noPrefix, midware, exec, final, location }) {
     /** @type {import('./handler.js').Handler} */
     this.handler = null;
 
@@ -55,6 +56,12 @@ export class Plugin {
 
     /** @type {string | string[]}*/
     this.cmd = cmd;
+
+    /** @type {string} */
+    this.prefix = prefix
+
+    /** @type {boolean} */
+    this.noPrefix = noPrefix;
 
     /** @type {string} */
     this.desc = desc;
@@ -80,9 +87,6 @@ export class Plugin {
      * @type {number}
      */
     this.timeout = timeout;
-
-    /** @type {boolean} */
-    this.noPrefix = noPrefix;
 
     /** @type {(ctx: import('./context.js').Ctx) => Promise<Reason> | Reason} */
     this.midware = midware;
