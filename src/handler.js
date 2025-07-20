@@ -362,7 +362,7 @@ export class Handler {
         eventType: eventType
       });
 
-      this.updateData(ctx);
+      await this.updateData(ctx);
 
       for (const lsid of this.listens.values()) {
         /** @type {import('./plugin.js').Plugin} */
@@ -375,15 +375,15 @@ export class Handler {
           /* Check rules and midware before exec */
           const reason = await listen.check(ctx);
           if (!reason?.success) {
-            if (listen?.final) listen.final(ctx, reason);
+            if (listen?.final) await listen.final(ctx, reason);
             continue;
           }
 
           /* Exec */
-          if (listen.exec) listen.exec(ctx);
+          if (listen.exec) await listen.exec(ctx);
         } catch (e) {
           this.pen.Error(e);
-          if (listen?.final) listen.final(ctx, new Reason({
+          if (listen?.final) await listen.final(ctx, new Reason({
             success: false,
             code: 'handle-listen-error',
             author: import.meta.url,
@@ -407,15 +407,15 @@ export class Handler {
             /* Check rules and midware before exec */
             const reason = await plugin.check(ctx);
             if (!reason?.success) {
-              if (plugin?.final) plugin.final(ctx, reason);
+              if (plugin?.final) await plugin.final(ctx, reason);
               return;
             }
 
             /* Exec */
-            if (plugin.exec) plugin.exec(ctx);
+            if (plugin.exec) await plugin.exec(ctx);
           } catch (e) {
             this.pen.Error(e);
-            if (plugin?.final) plugin.final(ctx, new Reason({
+            if (plugin?.final) await plugin.final(ctx, new Reason({
               success: false,
               code: 'handle-command-error',
               author: import.meta.url,
