@@ -16,7 +16,7 @@ import { fromOwner, settings } from '../settings.js';
 /** @type {import('../../src/plugin.js').Plugin} */
 export default [
   {
-    cmd: ['prefix', 'prefix-', 'pre', 'pre-'],
+    cmd: ['prefix', 'prefix+', 'prefix-', 'pre', 'pre+', 'pre-'],
     timeout: 15,
     cat: 'system',
     tags: ['system'],
