@@ -37,7 +37,7 @@ export function fromOwner(c) {
     data: c.sender
   });
 
-  const owners = settings.get('owners_' + c.me);
+  const owners = settings.get('owners');
   if (!owners || !Array.isArray(owners)) {
     return res;
   }
