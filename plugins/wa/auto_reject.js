@@ -14,6 +14,7 @@ import pen from '../../src/pen.js';
 import { delay, randomNumber } from '../../src/tools.js';
 import { settings } from '../settings.js';
 
+const AUTO_REJECT_KEY = 'auto_reject';
 
 /** @type {import('../../src/plugin.js').Plugin[]} */
 export default [
@@ -25,10 +26,9 @@ export default [
       eventNameIs(CALL),
       (ctx) => ({ success: !ctx.isStatus }),
       (ctx) => ({ success: !ctx.fromMe }),
-      (ctx) => ({ success: settings.get(`auto_reject_${ctx.me}`) })
+      (ctx) => ({ success: settings.get(AUTO_REJECT_KEY) })
     ),
 
-    /** @param {import('../../src/context.js').Ctx} c */
     exec: async (c) => {
       if (c.callStatus !== 'offer') return;
 
@@ -49,25 +49,35 @@ export default [
       fromMe,
     ),
     exec: async (c) => {
-      const key = `auto_reject_${c.me}`;
       let pattern = c.pattern;
-      if (c.pattern.endsWith('+')) {
-        settings.set(key, true)
-        pattern = c.pattern.slice(0, -1);
-        pen.Warn(`Activating auto reject for ${c.me}`);
-      } else if (c.pattern.endsWith('-')) {
-        settings.set(key, false)
-        pattern = c.pattern.slice(0, -1);
-        pen.Warn(`Deactivating auto reject for ${c.me}`);
+      const ends = c.pattern.slice(-1);
+      switch (ends) {
+        case '+': {
+          settings.set(AUTO_REJECT_KEY, true);
+          pattern = c.pattern.slice(0, -1);
+          pen.Warn(`Activating auto reject for ${c.me}`);
+          break;
+        }
+
+        case '-': {
+          settings.set(AUTO_REJECT_KEY, false);
+          pattern = c.pattern.slice(0, -1);
+          pen.Warn(`Deactivating auto reject for ${c.me}`);
+          break;
+        }
       }
-      const set = settings.get(key);
-      let text = '';
-      if (set) {
-        text = `Auto reject status : *${set}*`;
-      } else {
-        text = `Auto reject is not yet set.`;
-      }
-      c.reply({ text: text + `\n\nNB :\n  *${pattern}-* _to deactivating_\n  *${pattern}+* _to activating_` }, { qouted: c.message })
+
+      let set = settings.get(AUTO_REJECT_KEY);
+      if (!set) set = false;
+      let texts = [];
+      texts.push(`📵 *Auto reject status* : *${set}*`);
+
+      texts.push(
+        '', 'NB :',
+        `  *${pattern}-* _to deactivating_`,
+        `  *${pattern}+* _to activating_`
+      );
+      c.reply({ text: texts.join('\n') }, { qouted: c.message })
     }
   }
 ]
