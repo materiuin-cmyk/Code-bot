@@ -9,10 +9,10 @@
  */
 
 import { CALL, MESSAGES_UPSERT } from '../../src/const.js';
-import { eventNameIs, fromMe, midwareAnd } from '../../src/midware.js';
+import { eventNameIs, fromMe, midwareAnd, midwareOr } from '../../src/midware.js';
 import pen from '../../src/pen.js';
 import { delay, randomNumber } from '../../src/tools.js';
-import { settings } from '../settings.js';
+import { fromOwner, settings } from '../settings.js';
 
 const AUTO_REJECT_KEY = 'auto_reject';
 
@@ -46,7 +46,7 @@ export default [
     timeout: 15,
     midware: midwareAnd(
       eventNameIs(MESSAGES_UPSERT),
-      fromMe,
+      midwareOr(fromMe, fromOwner)
     ),
     exec: async (c) => {
       let pattern = c.pattern;
